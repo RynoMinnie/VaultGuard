@@ -21,6 +21,7 @@ import {
   Trash2,
   Eye,
   EyeOff,
+  FileText,
 } from 'lucide-react';
 import type { DecryptedEntry } from '@/store';
 import { cn } from '@/lib/utils';
@@ -81,13 +82,16 @@ export function EntryRow({ entry, onEdit, onDelete }: EntryRowProps) {
     <div
       className={cn(
         "group flex items-center gap-3 rounded-lg border border-border/40 bg-card/50 hover:bg-card/80 hover:border-primary/20 px-4 py-3 transition-all duration-200 cursor-pointer",
-        isSelected && 'border-primary/40 bg-primary/5'
+        isSelected && 'border-primary/40 bg-primary/5 row-selected'
       )}
       onClick={() => touchEntry(entry.id)}
     >
       {/* Selection checkbox */}
       <button
-        className="mr-1 shrink-0 h-4 w-4 rounded border flex items-center justify-center transition-all duration-150"
+        className={cn(
+          "mr-1 shrink-0 h-4 w-4 rounded border flex items-center justify-center transition-all duration-150 select-check",
+          isSelected && "is-active"
+        )}
         onClick={(e) => { e.stopPropagation(); toggleSelect(entry.id); }}
         title={isSelected ? 'Deselect' : 'Select'}
         style={{
@@ -156,6 +160,18 @@ export function EntryRow({ entry, onEdit, onDelete }: EntryRowProps) {
             <CopyBtn text={data.password} label="Password" />
           </>
         )}
+      </div>
+
+      {/* Notes - xl screens only */}
+      <div className="hidden xl:flex items-center gap-1.5 w-40 shrink-0">
+        {data.other ? (
+          <span className="text-[11px] text-muted-foreground/60 italic truncate">
+            {data.other.length > 30 ? data.other.slice(0, 30) + '...' : data.other}
+          </span>
+        ) : (
+          <span className="text-xs text-muted-foreground/30">—</span>
+        )}
+        <FileText className="h-3 w-3 text-muted-foreground/30 shrink-0" />
       </div>
 
       {/* Updated */}

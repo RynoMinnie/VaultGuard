@@ -41,8 +41,11 @@ import {
   AlertTriangle,
   CopyCheck,
   CopyX,
+  FileText,
+  ChevronDown,
 } from 'lucide-react';
 import { CategoryTag } from './category-tag';
+import { cn } from '@/lib/utils';
 import type { DecryptedEntry } from '@/store';
 import { useVaultStore } from '@/store';
 import { toast } from 'sonner';
@@ -127,6 +130,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
 export function EntryCard({ entry, onEdit, onDuplicate, onDelete, onView }: EntryCardProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [pwCopied, setPwCopied] = useState(false);
+  const [notesExpanded, setNotesExpanded] = useState(false);
   const { touchEntry, toggleFavorite, toggleSelect, selectedIds } = useVaultStore();
   const { data } = entry;
   const isFav = data.isFavorite;
@@ -154,12 +158,18 @@ export function EntryCard({ entry, onEdit, onDuplicate, onDelete, onView }: Entr
     <ContextMenu>
       <ContextMenuTrigger>
         <Card
-          className="group border-border/50 bg-card/70 backdrop-blur-sm hover:border-primary/30 hover:emerald-glow-sm card-hover-lift transition-all duration-300 animate-scale-in cursor-pointer"
+          className={cn(
+            "group border-border/50 bg-card/70 backdrop-blur-sm hover:border-primary/30 hover:emerald-glow-sm card-hover-lift transition-all duration-300 animate-scale-in cursor-pointer",
+            isSelected && "card-selected"
+          )}
         >
           <CardContent className="p-4 space-y-3" onClick={handleCardClick}>
             {/* Selection checkbox */}
             <button
-              className="absolute top-2.5 left-2.5 z-10 h-5 w-5 rounded-md border-2 flex items-center justify-center transition-all duration-150"
+              className={cn(
+                "absolute top-2.5 left-2.5 z-10 h-5 w-5 rounded-md border-2 flex items-center justify-center transition-all duration-150 select-check",
+                isSelected && "is-active"
+              )}
               onClick={(e) => { e.stopPropagation(); toggleSelect(entry.id); }}
               title={isSelected ? 'Deselect' : 'Select'}
               style={{
@@ -323,6 +333,27 @@ export function EntryCard({ entry, onEdit, onDuplicate, onDelete, onView }: Entr
                 </div>
               )}
             </div>
+
+            {/* Notes preview */}
+            {data.other && (
+              <div
+                className="flex items-start gap-1.5 text-[11px] text-muted-foreground/60 italic cursor-pointer select-none hover:text-muted-foreground/80 transition-colors"
+                onClick={(e) => { e.stopPropagation(); setNotesExpanded(!notesExpanded); }}
+              >
+                <FileText className="h-3 w-3 shrink-0 mt-0.5" />
+                <span className="min-w-0">
+                  {notesExpanded
+                    ? data.other
+                    : data.other.length > 60
+                      ? data.other.slice(0, 60) + '...'
+                      : data.other
+                  }
+                </span>
+                {data.other.length > 60 && (
+                  <ChevronDown className={cn("h-3 w-3 shrink-0 mt-0.5 transition-transform duration-200", notesExpanded && "rotate-180")} />
+                )}
+              </div>
+            )}
 
             {/* Footer: last accessed */}
             {data.lastAccessed && (

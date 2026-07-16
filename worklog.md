@@ -214,3 +214,109 @@ Stage Summary:
   6. Consider adding: entry version history (track password changes over time)
   7. Mobile responsive testing on real devices still recommended
   8. Consider adding Framer Motion for page transition animations (currently using CSS only)
+
+---
+Task ID: 9
+Agent: Styling Agent
+Task: CSS polish - selection animations, card micro-interactions, visual refinements
+
+Work Log:
+- Added 7 new CSS animation classes and 4 new @keyframes to globals.css
+- `.select-check` — checkbox bounce animation (scale 0.8→1.1→1.0), emerald glow ring on active, border color transition on hover
+- `.bulk-bar` — slide-down from top animation, gradient background (emerald/5 → teal/3), animated gradient bottom border via pseudo-element
+- `.card-selected` — 3px emerald left border accent, subtle emerald background tint, elevated shadow, one-time shine sweep animation
+- `.stat-card-hover` — scale(1.02) + enhanced shadow on hover, gradient overlay fade-in via ::after, text-shadow glow on value text
+- `.row-selected` — 2px emerald left border, background slide-in from left (scaleX animation)
+- `.btn-press` — scale(0.97) + brightness(1.1) on :active, 100ms spring-back transition
+- Toast enhancement — slide-in from right + fade animation, 3px left border accent (emerald for success, red for error) targeting [data-sonner-toast]
+- Applied `bulk-bar` class to bulk action bar div in page.tsx (replacing `animate-slide-up`)
+- Applied `card-selected` class to EntryCard Card via `cn()` when `isSelected` is true
+- Applied `select-check` + `is-active` classes to EntryCard selection checkbox button
+- Applied `row-selected` class to EntryRow container div when `isSelected` is true
+- Applied `select-check` + `is-active` classes to EntryRow selection checkbox button
+- Applied `stat-card-hover` class to StatCard div in stats-overview.tsx
+- Verified: 0 TypeScript errors in src/ (tsc --noEmit)
+
+Stage Summary:
+- 7 new micro-interaction CSS classes added with oklch color values matching existing theme
+- 4 new @keyframes: check-bounce, bulk-slide-down, bulk-border-glow, card-select-shine, row-bg-slide, toast-slide-in
+- Selection states now have visual feedback: bounce animation on checkboxes, left-border accent + shine on cards, slide-in bg on rows
+- Bulk action bar has polished gradient background with animated bottom glow line
+- Stat cards have hover micro-animations (scale, shadow, gradient overlay, text glow)
+- Toasts have slide-in-from-right animation with colored left-border accent
+- All existing styles preserved, zero breaking changes
+---
+Task ID: 8
+Agent: Feature Agent
+Task: Notes preview in cards + Security Audit feature
+
+Work Log:
+- Added collapsible notes preview to EntryCard (entry-card.tsx): FileText icon + italic muted text, shows first 60 chars with "..." truncation, click to expand/collapse with ChevronDown rotation animation, only renders when data.other has content
+- Added notes column to EntryRow (entry-row.tsx): visible on xl screens only, positioned between Password and Modified columns, shows first 30 chars truncated with "..." and a FileText icon, small muted italic text
+- Added Security Audit button with ShieldCheck icon to VaultHeader (vault-header.tsx): positioned before Export button in desktop toolbar, also added to mobile dropdown menu
+- Created Security Audit Dialog using shadcn/ui Dialog + Progress components: shows overall security score (color-coded emerald/amber/red), progress bar, and 4 audit items (Total Entries, Weak Passwords <40%, Expired Passwords, Entries Without Notes)
+- Implemented audit scoring algorithm: starts at 100%, -5 per weak password, -3 per expired password, -1 per no-notes entry, clamped to 0
+- Created AuditItem helper component with variant-based color coding (neutral/success/warning/danger)
+- Bumped APP_VERSION from v0.3.0 to v0.3.1
+
+Stage Summary:
+- NEW: Collapsible notes preview on entry cards with FileText icon and 60-char truncation
+- NEW: Notes column in list view (xl breakpoint) with 30-char truncation
+- NEW: Security Audit dialog with overall score, progress bar, and 4 categorized audit metrics
+- Verified: 0 TypeScript errors in src/, 0 ESLint errors
+- Verified: Dev server compiles successfully
+
+---
+Task ID: 5
+Agent: Main Agent (Review & QA Round 5)
+Task: Fix critical TS errors from incomplete bulk selection, E2E test, add features + styling
+
+Work Log:
+- Discovered critical TypeScript errors left by incomplete bulk selection implementation from a previous session:
+  - entry-card.tsx: `selectedIds` referenced from store but not defined in VaultState interface
+  - entry-row.tsx: same `selectedIds` issue
+  - page.tsx: references to `hasSelection`, `allSelected`, `toggleSelectAll`, `selectedCount`, `removeEntries`, `selectedIds`, `clearSelection`, `Trash2` — all undefined
+  - page.tsx: `<RecentlyUsed />` should be `<RecentlyUsedSection />` (wrong component name)
+- Fixed ESLint by installing missing hermes-parser dependency
+- Added to VaultState store: `selectedIds: Set<string>`, `toggleSelect()`, `toggleSelectAll()`, `clearSelection()`, `removeEntries()`
+- Modified `removeEntry` and `setEntries` to also clear/reset selection state
+- Added `setFavoriteFilter` to clear selection on filter change
+- Fixed page.tsx: imported Trash2/CheckSquare/Square, added bulk selection variables, implemented `handleBulkDelete` (parallel API calls), rewrote bulk action bar with proper toggle button
+- Fixed entry-card.tsx: added `toggleSelect` to destructured store, made checkbox always visible and clickable (was only visible when selected), wired `toggleSelect(entry.id)` with stopPropagation
+- Fixed entry-row.tsx: same checkbox fix as entry-card
+- Full E2E testing via agent-browser:
+  - Registered new user (e2etest), vault created successfully
+  - Added 2 test entries (GitHub, Gmail)
+  - Verified bulk selection: Select/Deselect checkboxes, bulk action bar (Select all/Delete Selected/Cancel)
+  - Verified list view with selection checkboxes
+  - Verified entry detail sheet opens
+  - Verified Security Audit dialog: score 98%, 2 entries, 0 weak, 0 expired, 2 without notes
+  - Verified all 8 stat cards, Favorites filter, Grid/List toggle
+- Delegated to subagents:
+  - Feature Agent: Notes preview in cards/rows + Security Audit dialog
+  - Styling Agent: 7 CSS animation classes (select-check, bulk-bar, card-selected, stat-card-hover, row-selected, btn-press, toast enhancement)
+- Bumped APP_VERSION to v0.4.0
+
+Stage Summary:
+- CRITICAL FIX: Completed half-implemented bulk selection feature across 4 files (store, page, card, row)
+- CRITICAL FIX: Fixed `<RecentlyUsed />` → `<RecentlyUsedSection />` wrong component reference
+- FIX: Installed missing hermes-parser for ESLint
+- NEW: Bulk select/delete entries with animated action bar
+- NEW: Security Audit dialog with scoring algorithm
+- NEW: Collapsible notes preview on entry cards
+- NEW: Notes column in list view (xl breakpoint)
+- STYLE: 7 micro-interaction CSS classes with oklch colors
+- Verified: 0 TypeScript errors in src/, 0 ESLint errors
+- E2E VERIFIED: Register → vault → create entries → select cards → bulk bar → security audit → list view → detail sheet
+
+- 项目当前状态描述/判断:
+  Password Vault v0.4.0 稳定运行，所有 TypeScript/ESLint 检查通过。本轮修复了上一轮遗留的关键 TS 编译错误（未完成的批量选择功能），完成了该功能的完整实现，并通过子代理新增了安全审计对话框、笔记预览和大量 CSS 微交互动画。
+
+- 未解决问题或风险，建议下一阶段优先事项:
+  1. 密码生成器预设（Strong/Passphrase/PIN/Memorable）已存在，无需再添加
+  2. 考虑添加：TOTP/2FA 密钥存储字段及 QR 码生成
+  3. 考虑添加：CSV 导出格式选项
+  4. 考虑添加：条目版本历史（跟踪密码更改）
+  5. 考虑添加：Framer Motion 页面过渡动画
+  6. 移动端响应式建议在真实设备上测试
+  7. HIBP API 真实泄露检查可替换当前的本地评分

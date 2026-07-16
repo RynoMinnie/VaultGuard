@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -33,9 +33,23 @@ import {
   Keyboard,
   Tag,
   Star,
+  ShieldCheck,
+  AlertTriangle,
+  Lock,
+  FileText,
+  ShieldAlert,
 } from 'lucide-react';
 import { useVaultStore, type SortField, type SortDirection } from '@/store';
 import { CATEGORIES, type CategoryId, CategoryTag } from './category-tag';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 
 interface VaultHeaderProps {
@@ -79,6 +93,45 @@ export function VaultHeader({
   } = useVaultStore();
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
+  const [auditOpen, setAuditOpen] = useState(false);
+
+  const auditData = useMemo(() => {
+    const total = entries.length;
+    let weakCount = 0;
+    let expiredCount = 0;
+    let noNotesCount = 0;
+
+    for (const e of entries) {
+      // Weak password check (score < 40%)
+      const pw = e.data.password;
+      if (pw) {
+        let s = 50;
+        if (pw.length >= 8) s += 10;
+        if (pw.length >= 12) s += 15;
+        if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) s += 10;
+        if (/[0-9]/.test(pw)) s += 10;
+        if (/[^a-zA-Z0-9]/.test(pw)) s += 10;
+        if (/password|123456|qwerty|abc123|letmein|admin|welcome|monkey/i.test(pw)) s -= 15;
+        if (/(.)\1{2,}/.test(pw)) s -= 10;
+        s = Math.max(0, Math.min(100, s));
+        if (s < 40) weakCount++;
+      }
+
+      // Expired check
+      if (e.data.expiryDate && new Date(e.data.expiryDate) <= new Date()) {
+        expiredCount++;
+      }
+
+      // No notes check
+      if (!e.data.other) {
+        noNotesCount++;
+      }
+    }
+
+    const score = Math.max(0, 100 - (weakCount * 5) - (expiredCount * 3) - (noNotesCount * 1));
+
+    return { total, weakCount, expiredCount, noNotesCount, score };
+  }, [entries]);
 
   const filteredCount = getFilteredAndSorted().length;
   const categories = getCategories();
@@ -196,6 +249,75 @@ export function VaultHeader({
           </Button>
 
           <div className="hidden md:flex items-center gap-1">
+            <Dialog open={auditOpen} onOpenChange={setAuditOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="icon" title="Security Audit" className="h-10 w-10">
+                  <ShieldCheck className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <ShieldCheck className="h-5 w-5 text-primary" />
+                    Security Audit
+                  </DialogTitle>
+                  <DialogDescription>Overview of your vault security posture</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 mt-2">
+                  {/* Overall score */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Overall Security Score</span>
+                      <span className={cn(
+                        'font-bold tabular-nums text-lg',
+                        auditData.score >= 70 ? 'text-emerald-400' : auditData.score >= 40 ? 'text-amber-400' : 'text-red-400'
+                      )}>
+                        {auditData.score}%
+                      </span>
+                    </div>
+                    <Progress
+                      value={auditData.score}
+                      className={cn(
+                        'h-2',
+                        auditData.score >= 70 && '[&>div]:bg-emerald-500',
+                        auditData.score >= 40 && auditData.score < 70 && '[&>div]:bg-amber-500',
+                        auditData.score < 40 && '[&>div]:bg-red-500'
+                      )}
+                    />
+                  </div>
+
+                  <div className="h-px bg-border" />
+
+                  {/* Audit items */}
+                  <div className="space-y-3">
+                    <AuditItem
+                      icon={<Lock className="h-4 w-4 text-primary" />}
+                      label="Total Entries"
+                      value={String(auditData.total)}
+                      variant="neutral"
+                    />
+                    <AuditItem
+                      icon={<ShieldAlert className="h-4 w-4 text-red-400" />}
+                      label="Weak Passwords (score &lt;40%)"
+                      value={String(auditData.weakCount)}
+                      variant={auditData.weakCount > 0 ? 'danger' : 'success'}
+                    />
+                    <AuditItem
+                      icon={<AlertTriangle className="h-4 w-4 text-amber-400" />}
+                      label="Expired Passwords"
+                      value={String(auditData.expiredCount)}
+                      variant={auditData.expiredCount > 0 ? 'danger' : 'success'}
+                    />
+                    <AuditItem
+                      icon={<FileText className="h-4 w-4 text-muted-foreground" />}
+                      label="Entries Without Notes"
+                      value={String(auditData.noNotesCount)}
+                      variant={auditData.noNotesCount > 0 ? 'warning' : 'success'}
+                    />
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
             <Button variant="outline" size="icon" onClick={onExport} title="Export vault" className="h-10 w-10">
               <FileDown className="h-4 w-4" />
             </Button>
@@ -215,6 +337,10 @@ export function VaultHeader({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setAuditOpen(true)}>
+                  <ShieldCheck className="h-4 w-4 mr-2" /> Security Audit
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={onExport}>
                   <FileDown className="h-4 w-4 mr-2" /> Export
                 </DropdownMenuItem>
@@ -357,6 +483,36 @@ export function VaultHeader({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function AuditItem({
+  icon,
+  label,
+  value,
+  variant,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  variant: 'neutral' | 'success' | 'warning' | 'danger';
+}) {
+  return (
+    <div className="flex items-center justify-between rounded-lg bg-muted/30 px-3 py-2.5">
+      <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
+        {icon}
+        <span>{label}</span>
+      </div>
+      <span className={cn(
+        'font-semibold tabular-nums text-sm',
+        variant === 'success' && 'text-emerald-400',
+        variant === 'warning' && 'text-amber-400',
+        variant === 'danger' && 'text-red-400',
+        variant === 'neutral' && 'text-foreground'
+      )}>
+        {value}
+      </span>
     </div>
   );
 }

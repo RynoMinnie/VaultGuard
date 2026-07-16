@@ -50,7 +50,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const APP_VERSION = 'v0.3.0';
+const APP_VERSION = 'v0.4.0';
 
 // =============== AUTH SCREEN ===============
 function AuthScreen() {
@@ -603,7 +603,7 @@ function VaultScreen() {
 
         {/* Bulk actions bar */}
         {hasSelection && (
-          <div className="flex items-center gap-2 mb-3 p-2.5 rounded-xl border border-primary/20 bg-primary/5 animate-slide-up">
+          <div className="flex items-center gap-2 mb-3 p-2.5 rounded-xl border border-primary/20 bg-primary/5 bulk-bar">
             <div className="flex items-center gap-1.5 text-sm">
               <button
                 onClick={() => toggleSelectAll(filteredEntries.map((e) => e.id))}

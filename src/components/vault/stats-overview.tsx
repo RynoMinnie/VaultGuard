@@ -190,7 +190,7 @@ function StatCard({
   const card = (
     <div
       className={cn(
-        'rounded-xl border border-border/40 bg-card/50 p-3 space-y-1.5 transition-all duration-300 border-l-[3px]',
+        'rounded-xl border border-border/40 bg-card/50 p-3 space-y-1.5 transition-all duration-300 border-l-[3px] stat-card-hover',
         accent ? 'border-l-primary/50 hover:bg-primary/5 border-primary/20 bg-primary/5' : '',
         accentColor || '',
         highlight && 'animate-pulse-glow'

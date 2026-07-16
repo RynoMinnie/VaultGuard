@@ -161,7 +161,8 @@ function AuthScreen() {
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-primary/5 rounded-full blur-3xl float-animate" />
         <div className="absolute -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-teal/5 rounded-full blur-3xl float-animate" style={{ animationDelay: '-3s' }} />
-      </div>
+      Trash2,
+  </div>
 
       <Card className="w-full max-w-md border-border/40 bg-card/70 backdrop-blur-2xl gradient-border noise-bg relative z-10 animate-fade-in">
         <CardContent className="p-8">
@@ -574,6 +575,46 @@ function VaultScreen() {
           onChangePassword={() => setChangePwOpen(true)}
         />
 
+
+        {/* Bulk actions bar */}
+        {hasSelection && (
+          <div className="flex items-center gap-2 mb-3 p-2.5 rounded-xl border border-primary/20 bg-primary/5 animate-slide-up">
+            <div className="flex items-center gap-1.5 text-sm">
+              <input
+                type="checkbox"
+                checked={allSelected}
+                onChange={toggleSelectAll}
+                className="h-4 w-4 rounded border-primary/40 accent-primary"
+              />
+              <span className="text-primary font-medium">
+                {selectedCount} selected
+              </span>
+            </div>
+            <div className="flex-1" />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (confirm(`Delete ${selectedCount} selected entries?`)) {
+                  removeEntries(Array.from(selectedIds));
+                  toast.success(`Deleted ${selectedCount} entries`);
+                }
+              }}
+              className="h-8 gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              <span className="text-xs">Delete Selected</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearSelection}
+              className="h-8 text-xs text-muted-foreground hover:text-foreground"
+            >
+              Cancel
+            </Button>
+          </div>
+        )}
         <div className="mt-6">
           {isLoading ? (
             <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-2'}>
@@ -622,7 +663,7 @@ function VaultScreen() {
             </div>
           ) : (
             <>
-              <RecentlyUsedSection />
+              {viewMode === 'grid' && <RecentlyUsed />}
 
               {viewMode === 'grid' ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 stagger-children">

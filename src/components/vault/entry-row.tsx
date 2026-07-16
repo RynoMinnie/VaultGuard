@@ -23,6 +23,8 @@ import {
   EyeOff,
 } from 'lucide-react';
 import type { DecryptedEntry } from '@/store';
+import { cn } from '@/lib/utils';
+
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { CategoryTag } from './category-tag';
@@ -68,7 +70,8 @@ function CopyBtn({ text, label }: { text: string; label: string }) {
 export function EntryRow({ entry, onEdit, onDelete }: EntryRowProps) {
   const [showPassword, setShowPassword] = useState(false);
   const { data } = entry;
-  const { touchEntry } = useVaultStore();
+  const { touchEntry, selectedIds } = useVaultStore();
+  const isSelected = selectedIds.has(entry.id);
 
   const updatedDate = entry.updatedAt
     ? format(new Date(entry.updatedAt), 'MMM d, yyyy')
@@ -76,9 +79,20 @@ export function EntryRow({ entry, onEdit, onDelete }: EntryRowProps) {
 
   return (
     <div
-      className="group flex items-center gap-3 rounded-lg border border-border/40 bg-card/50 hover:bg-card/80 hover:border-primary/20 px-4 py-3 transition-all duration-200 cursor-pointer"
+      className={cn(
+        "group flex items-center gap-3 rounded-lg border border-border/40 bg-card/50 hover:bg-card/80 hover:border-primary/20 px-4 py-3 transition-all duration-200 cursor-pointer",
+        isSelected && 'border-primary/40 bg-primary/5'
+      )}
       onClick={() => touchEntry(entry.id)}
     >
+      {/* Selection checkbox */}
+      {isSelected && (
+        <div className="mr-1 shrink-0">
+          <div className="h-4 w-4 rounded bg-primary border border-primary/60 flex items-center justify-center">
+            <Check className="h-2.5 w-2.5 text-primary-foreground" />
+          </div>
+        </div>
+      )}
       {/* Platform + Category */}
       <div className="flex-1 min-w-0 flex items-center gap-2">
         <div className="min-w-0 flex-1">

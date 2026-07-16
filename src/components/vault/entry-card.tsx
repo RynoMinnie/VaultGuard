@@ -127,9 +127,10 @@ function CopyButton({ text, label }: { text: string; label: string }) {
 export function EntryCard({ entry, onEdit, onDuplicate, onDelete, onView }: EntryCardProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [pwCopied, setPwCopied] = useState(false);
-  const { touchEntry, toggleFavorite } = useVaultStore();
+  const { touchEntry, toggleFavorite, selectedIds } = useVaultStore();
   const { data } = entry;
   const isFav = data.isFavorite;
+  const isSelected = selectedIds.has(entry.id);
 
   const handleCardClick = () => {
     touchEntry(entry.id);
@@ -156,6 +157,15 @@ export function EntryCard({ entry, onEdit, onDuplicate, onDelete, onView }: Entr
           className="group border-border/50 bg-card/70 backdrop-blur-sm hover:border-primary/30 hover:emerald-glow-sm card-hover-lift transition-all duration-300 animate-scale-in cursor-pointer"
         >
           <CardContent className="p-4 space-y-3" onClick={handleCardClick}>
+            {/* Selection checkbox */}
+            {isSelected && (
+              <div className="absolute top-2 right-2 z-10">
+                <div className="h-5 w-5 rounded-md bg-primary border-2 border-primary flex items-center justify-center">
+                  <Check className="h-3 w-3 text-primary-foreground" />
+                </div>
+              </div>
+            )}
+
             {/* Header */}
             <div className="flex items-start justify-between gap-2">
               <button

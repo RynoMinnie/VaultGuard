@@ -50,7 +50,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const APP_VERSION = 'v0.4.0';
+const APP_VERSION = 'v0.5.0';
 
 // =============== AUTH SCREEN ===============
 function AuthScreen() {

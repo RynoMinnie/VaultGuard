@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+
 import {
   Copy,
   Check,
@@ -33,10 +33,13 @@ import {
   AlertTriangle,
   CopyX,
   ClipboardCopy,
+  KeyRound,
+  History,
 } from 'lucide-react';
 import { CategoryTag, type CategoryId } from './category-tag';
 import { PasswordStrengthMeter } from './password-strength-meter';
 import { useVaultStore, type DecryptedEntry } from '@/store';
+import type { PasswordHistoryEntry } from '@/lib/crypto';
 import { toast } from 'sonner';
 import { format, formatDistanceToNow } from 'date-fns';
 
@@ -214,6 +217,12 @@ export function EntryDetailSheet({ entry, open, onOpenChange, onEdit, onDuplicat
                 <h2 className="text-lg font-bold truncate">{data.platform}</h2>
                 <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                   {data.category && <CategoryTag categoryId={data.category as CategoryId} size="sm" />}
+                  {data.totpSecret && (
+                    <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/25 text-[10px] h-5 gap-1 px-1.5 font-medium">
+                      <KeyRound className="h-3 w-3" />
+                      2FA Enabled
+                    </Badge>
+                  )}
                   {data.expiryDate && (() => {
                     const status = getExpiryStatus(data.expiryDate);
                     if (status === 'expired') {
@@ -242,7 +251,7 @@ export function EntryDetailSheet({ entry, open, onOpenChange, onEdit, onDuplicat
           </SheetHeader>
         </div>
 
-        <div className="px-6 py-4 space-y-5">
+        <div className="px-6 py-4 space-y-5 sheet-content-animate">
           {/* Quick actions */}
           <div className="flex items-center gap-2 flex-wrap">
             <Button
@@ -286,6 +295,7 @@ export function EntryDetailSheet({ entry, open, onOpenChange, onEdit, onDuplicat
                   data.username ? `Username: ${data.username}` : '',
                   data.email ? `Email: ${data.email}` : '',
                   data.password ? `Password: ${data.password}` : '',
+                  data.totpSecret ? `TOTP Secret: ${data.totpSecret}` : '',
                   data.other ? `Notes: ${data.other}` : '',
                 ].filter(Boolean).join('\n');
                 navigator.clipboard.writeText(text).then(
@@ -312,7 +322,7 @@ export function EntryDetailSheet({ entry, open, onOpenChange, onEdit, onDuplicat
             </Button>
           </div>
 
-          <Separator />
+          <div className="divider-gradient" />
 
           {/* Credential fields */}
           <div className="space-y-4">
@@ -330,12 +340,26 @@ export function EntryDetailSheet({ entry, open, onOpenChange, onEdit, onDuplicat
               onToggle={() => { setShowPassword(!showPassword); if (!showPassword) touchEntry(id); }}
             />
             <DetailField icon={<FileText className="h-4 w-4" />} label="Notes" value={data.other || '—'} multiline />
+            {data.totpSecret && (
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground/60 flex items-center gap-1.5">
+                  <KeyRound className="h-4 w-4" />
+                  2FA / TOTP Secret
+                </label>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 rounded-lg bg-muted/40 px-3 py-2 font-mono text-sm break-all tracking-wide">
+                    {data.totpSecret}
+                  </code>
+                  <CopyBtn text={data.totpSecret} label="TOTP" />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Expiry info */}
           {data.expiryDate && (
             <>
-              <Separator />
+              <div className="divider-gradient" />
               <div className="space-y-2">
                 <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                   <CalendarClock className="h-3.5 w-3.5" />
@@ -346,7 +370,7 @@ export function EntryDetailSheet({ entry, open, onOpenChange, onEdit, onDuplicat
             </>
           )}
 
-          <Separator />
+          <div className="divider-gradient" />
 
           {/* Password analysis */}
           <div className="space-y-3">
@@ -358,7 +382,29 @@ export function EntryDetailSheet({ entry, open, onOpenChange, onEdit, onDuplicat
             <BreachCheck password={data.password} />
           </div>
 
-          <Separator />
+          <div className="divider-gradient" />
+
+          {/* Password History */}
+          {data.passwordHistory && data.passwordHistory.length > 0 && (
+            <div className="space-y-3">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                <History className="h-3.5 w-3.5" />
+                Password History
+              </h4>
+              <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
+                {data.passwordHistory.slice(-5).reverse().map((hEntry: PasswordHistoryEntry, idx: number) => (
+                  <PasswordHistoryItem key={idx} entry={hEntry} />
+                ))}
+                {data.passwordHistory.length > 5 && (
+                  <p className="text-[11px] text-muted-foreground text-center pt-1">
+                    Showing last 5 of {data.passwordHistory.length}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="divider-gradient" />
 
           {/* Metadata */}
           <div className="space-y-2 text-[11px] text-muted-foreground">
@@ -388,6 +434,31 @@ export function EntryDetailSheet({ entry, open, onOpenChange, onEdit, onDuplicat
         </div>
       </SheetContent>
     </Sheet>
+  );
+}
+
+function PasswordHistoryItem({ entry }: { entry: PasswordHistoryEntry }) {
+  const [revealed, setRevealed] = useState(false);
+  return (
+    <div className="flex items-center gap-2 rounded-lg bg-muted/30 border border-border/30 px-3 py-2">
+      <div className="flex-1 min-w-0">
+        <code className="text-sm font-mono break-all">
+          {revealed ? entry.password : '••••••••••••'}
+        </code>
+        <p className="text-[10px] text-muted-foreground mt-0.5">
+          {formatDistanceToNow(new Date(entry.timestamp), { addSuffix: true })}
+        </p>
+      </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-7 w-7 shrink-0 hover:bg-primary/10"
+        onClick={() => setRevealed(!revealed)}
+      >
+        {revealed ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+      </Button>
+      <CopyBtn text={entry.password} label="Password" />
+    </div>
   );
 }
 

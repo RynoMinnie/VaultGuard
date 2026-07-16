@@ -187,7 +187,8 @@ export const useVaultStore = create<VaultState>((set, get) => ({
           d.email.toLowerCase().includes(q) ||
           d.password.toLowerCase().includes(q) ||
           d.other.toLowerCase().includes(q) ||
-          d.category.toLowerCase().includes(q)
+          d.category.toLowerCase().includes(q) ||
+          (d.totpSecret && d.totpSecret.toLowerCase().includes(q))
         );
       });
     }

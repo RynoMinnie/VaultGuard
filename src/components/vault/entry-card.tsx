@@ -114,7 +114,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
     <Button
       variant="ghost"
       size="icon"
-      className="h-7 w-7 shrink-0 hover:bg-primary/10"
+      className="h-7 w-7 shrink-0 hover:bg-primary/10 icon-btn-micro"
       onClick={copy}
       title={`Copy ${label.toLowerCase()}`}
     >
@@ -214,7 +214,7 @@ export function EntryCard({ entry, onEdit, onDuplicate, onDelete, onView }: Entr
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 hover:bg-primary/10"
+                  className="h-7 w-7 hover:bg-primary/10 icon-btn-micro"
                   onClick={(e) => { e.stopPropagation(); toggleFavorite(entry.id); toast.success(isFav ? 'Unstarred' : 'Starred'); }}
                   title={isFav ? 'Remove from favorites' : 'Add to favorites'}
                 >
@@ -223,7 +223,7 @@ export function EntryCard({ entry, onEdit, onDuplicate, onDelete, onView }: Entr
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 hover:bg-primary/10"
+                  className="h-7 w-7 hover:bg-primary/10 icon-btn-micro"
                   onClick={(e) => { e.stopPropagation(); onEdit(entry); }}
                   title="Edit"
                 >
@@ -234,7 +234,7 @@ export function EntryCard({ entry, onEdit, onDuplicate, onDelete, onView }: Entr
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 text-destructive/70 hover:text-destructive hover:bg-destructive/10"
+                      className="h-7 w-7 text-destructive/70 hover:text-destructive hover:bg-destructive/10 icon-btn-micro"
                       title="Delete"
                       onClick={(e) => e.stopPropagation()}
                     >
@@ -319,7 +319,7 @@ export function EntryCard({ entry, onEdit, onDuplicate, onDelete, onView }: Entr
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 shrink-0 hover:bg-primary/10"
+                    className="h-7 w-7 shrink-0 hover:bg-primary/10 icon-btn-micro"
                     onClick={(e) => { e.stopPropagation(); setShowPassword(!showPassword); }}
                     title={showPassword ? 'Hide' : 'Reveal'}
                   >

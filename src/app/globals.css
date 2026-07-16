@@ -647,3 +647,185 @@ select:focus-visible,
   border-left: 3px solid oklch(0.577 0.245 27.325);
   animation: toast-slide-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both !important;
 }
+
+/* ============ SEARCH INPUT ENHANCEMENT ============ */
+.search-glow {
+  transition: all 0.3s ease;
+}
+.search-glow:focus-within {
+  box-shadow: 0 0 0 2px oklch(0.696 0.17 162.48 / 20%), 0 0 20px oklch(0.696 0.17 162.48 / 8%);
+}
+
+/* ============ CATEGORY CHIP HOVER ============ */
+.chip-hover {
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+.chip-hover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, oklch(0.696 0.17 162.48 / 15%), oklch(0.65 0.15 175 / 10%));
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.chip-hover:hover::before {
+  opacity: 1;
+}
+.chip-hover:active {
+  transform: scale(0.96);
+}
+
+/* ============ ICON BUTTON MICRO ============ */
+.icon-btn-micro {
+  transition: all 0.15s ease;
+}
+.icon-btn-micro:hover {
+  transform: scale(1.08);
+}
+.icon-btn-micro:active {
+  transform: scale(0.92);
+}
+
+/* ============ PASSWORD DOTS ============ */
+@keyframes dots-appear {
+  from { opacity: 0; letter-spacing: 2px; }
+  to { opacity: 1; letter-spacing: 0; }
+}
+.password-dots-animate {
+  animation: dots-appear 0.3s ease-out;
+}
+
+/* ============ POPOVER/TOOLTIP GLOW ============ */
+.popover-glow {
+  box-shadow: 0 4px 30px oklch(0 0 0 / 30%), 0 0 0 1px oklch(0.696 0.17 162.48 / 10%);
+}
+
+/* ============ PROGRESS BAR ANIMATED FILL ============ */
+@keyframes progress-fill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.progress-animated > div {
+  transform-origin: left;
+  animation: progress-fill 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ============ BADGE PULSE ============ */
+@keyframes badge-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+.badge-pulse {
+  animation: badge-pulse 2s ease-in-out infinite;
+}
+
+/* ============ GRADIENT DIVIDER ============ */
+.divider-gradient {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, oklch(0.696 0.17 162.48 / 20%), oklch(0.65 0.15 175 / 15%), oklch(0.696 0.17 162.48 / 20%), transparent);
+  border: none;
+}
+
+/* ============ INPUT UNDERLINE GLOW ============ */
+.input-glow:focus {
+  border-bottom: 2px solid oklch(0.696 0.17 162.48 / 50%);
+}
+
+/* ============ CARD GRID ENTRANCE ============ */
+@keyframes card-entrance {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.card-entrance {
+  animation: card-entrance 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ============ SHEET CONTENT ENTRANCE ============ */
+@keyframes sheet-content-in {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+.sheet-content-animate > * {
+  animation: sheet-content-in 0.3s ease-out both;
+}
+.sheet-content-animate > *:nth-child(1) { animation-delay: 0.05s; }
+.sheet-content-animate > *:nth-child(2) { animation-delay: 0.1s; }
+.sheet-content-animate > *:nth-child(3) { animation-delay: 0.15s; }
+.sheet-content-animate > *:nth-child(4) { animation-delay: 0.2s; }
+.sheet-content-animate > *:nth-child(5) { animation-delay: 0.25s; }
+.sheet-content-animate > *:nth-child(n+6) { animation-delay: 0.3s; }
+
+/* ============ STAR FAVORITE ANIMATION ============ */
+@keyframes star-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+.star-pop {
+  animation: star-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ============ SKELETON WAVE ============ */
+@keyframes skeleton-wave {
+  0% { background-position: -400px 0; }
+  100% { background-position: calc(400px + 100%) 0; }
+}
+.skeleton-wave {
+  background: linear-gradient(90deg, oklch(0.22 0.012 155 / 40%) 0px, oklch(0.22 0.012 155 / 60%) 40px, oklch(0.22 0.012 155 / 40%) 80px);
+  background-size: 400px 100%;
+  animation: skeleton-wave 1.5s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+/* ============ HOVER UNDERLINE ============ */
+.hover-underline {
+  position: relative;
+}
+.hover-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: oklch(0.696 0.17 162.48 / 60%);
+  transition: width 0.2s ease;
+}
+.hover-underline:hover::after {
+  width: 100%;
+}
+
+/* ============ ERROR SHAKE ============ */
+@keyframes error-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+.error-shake {
+  animation: error-shake 0.4s ease-in-out;
+}
+
+/* ============ NUMBER FLASH ============ */
+@keyframes number-flash {
+  0% { color: oklch(0.696 0.17 162.48); text-shadow: 0 0 8px oklch(0.696 0.17 162.48 / 40%); }
+  100% { color: inherit; text-shadow: none; }
+}
+.number-flash {
+  animation: number-flash 0.6s ease-out;
+}

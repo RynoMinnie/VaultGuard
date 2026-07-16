@@ -4,6 +4,11 @@
  * and never leaves the client.
  */
 
+export interface PasswordHistoryEntry {
+  password: string;
+  timestamp: string;
+}
+
 export interface VaultEntryData {
   platform: string;
   platformUrl: string;
@@ -15,6 +20,8 @@ export interface VaultEntryData {
   lastAccessed: string;
   isFavorite: boolean;
   expiryDate: string;
+  totpSecret: string;
+  passwordHistory: PasswordHistoryEntry[];
 }
 
 const PBKDF2_ITERATIONS = 600000;

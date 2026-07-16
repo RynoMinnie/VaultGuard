@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import { PasswordGenerator } from './password-generator';
 import { PasswordStrengthMeter } from './password-strength-meter';
 import { CategoryPicker, type CategoryId } from './category-tag';
@@ -21,7 +22,7 @@ import { encryptEntry } from '@/lib/crypto';
 import type { VaultEntryData } from '@/lib/crypto';
 import type { DecryptedEntry } from '@/store';
 import { toast } from 'sonner';
-import { Loader2, Save, Tag, CalendarClock } from 'lucide-react';
+import { Loader2, Save, Tag, CalendarClock, KeyRound, ShieldCheck } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 interface EntryFormDialogProps {
@@ -43,6 +44,8 @@ const emptyData: VaultEntryData = {
   lastAccessed: '',
   isFavorite: false,
   expiryDate: '',
+  totpSecret: '',
+  passwordHistory: [],
 };
 
 export function EntryFormDialog({
@@ -82,7 +85,15 @@ export function EntryFormDialog({
 
     setSaving(true);
     try {
-      const saveData = { ...data, lastAccessed: entry?.data.lastAccessed || '', isFavorite: entry?.data.isFavorite ?? false };
+      const saveData = {
+        ...data,
+        lastAccessed: entry?.data.lastAccessed || '',
+        isFavorite: entry?.data.isFavorite ?? false,
+        totpSecret: data.totpSecret || '',
+        passwordHistory: isEditing && entry?.data.password && entry?.data.password !== data.password
+          ? [...(entry.data.passwordHistory || []), { password: entry.data.password, timestamp: new Date().toISOString() }].slice(-10)
+          : (data.passwordHistory || []),
+      };
       const { encryptedData, iv } = await encryptEntry(saveData, encryptionKey);
 
       if (isEditing) {
@@ -289,6 +300,30 @@ export function EntryFormDialog({
               rows={3}
               className="resize-none"
             />
+          </div>
+
+          {/* TOTP Secret */}
+          <div className="space-y-2">
+            <Label htmlFor="totpSecret" className="text-xs font-medium uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+              <KeyRound className="h-3 w-3" />
+              TOTP Secret (Optional)
+            </Label>
+            <Input
+              id="totpSecret"
+              value={data.totpSecret}
+              onChange={(e) => updateField('totpSecret', e.target.value)}
+              placeholder="e.g. JBSWY3DPEHPK3PXP"
+              className="h-10 font-mono tracking-wide"
+            />
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] text-muted-foreground">
+                Store your 2FA/TOTP secret for services like Google, GitHub, etc.
+              </p>
+              <Badge variant="outline" className="text-[10px] h-5 gap-1 px-1.5 text-emerald-400 border-emerald-500/25 bg-emerald-500/10 shrink-0 ml-2">
+                <ShieldCheck className="h-2.5 w-2.5" />
+                Encrypted with your vault
+              </Badge>
+            </div>
           </div>
         </div>
 

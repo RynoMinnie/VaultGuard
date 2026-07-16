@@ -215,7 +215,7 @@ export function VaultHeader({
 
       {/* Search + actions row — full width on mobile, flex on sm+ */}
       <div className="flex flex-col sm:flex-row gap-2">
-        <div className="relative flex-1 group w-full sm:w-auto">
+        <div className="relative flex-1 group w-full sm:w-auto search-glow">
           <Search className={cn(
             "absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors",
             searchFocused ? "text-primary" : "text-muted-foreground"
@@ -278,7 +278,7 @@ export function VaultHeader({
                     <Progress
                       value={auditData.score}
                       className={cn(
-                        'h-2',
+                        'h-2 progress-animated',
                         auditData.score >= 70 && '[&>div]:bg-emerald-500',
                         auditData.score >= 40 && auditData.score < 70 && '[&>div]:bg-amber-500',
                         auditData.score < 40 && '[&>div]:bg-red-500'
@@ -366,7 +366,7 @@ export function VaultHeader({
         <button
           onClick={() => { setCategoryFilter(''); setFavoriteFilter(false); }}
           className={cn(
-            'shrink-0 rounded-full px-2.5 sm:px-3 py-1 text-xs font-medium transition-all border',
+            'shrink-0 rounded-full px-2.5 sm:px-3 py-1 text-xs font-medium transition-all border chip-hover',
             !categoryFilter && !favoriteFilter
               ? 'bg-primary/15 text-primary border-primary/30'
               : 'border-border/50 text-muted-foreground hover:text-foreground hover:border-border'
@@ -377,7 +377,7 @@ export function VaultHeader({
         <button
           onClick={() => setFavoriteFilter(!favoriteFilter)}
           className={cn(
-            'shrink-0 rounded-full px-2.5 sm:px-3 py-1 text-xs font-medium transition-all border flex items-center gap-1.5',
+            'shrink-0 rounded-full px-2.5 sm:px-3 py-1 text-xs font-medium transition-all border flex items-center gap-1.5 chip-hover',
             favoriteFilter
               ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
               : 'border-border/50 text-muted-foreground hover:text-foreground hover:border-border'
@@ -391,7 +391,7 @@ export function VaultHeader({
             key={id}
             onClick={() => setCategoryFilter(categoryFilter === id ? '' : id)}
             className={cn(
-              'shrink-0 rounded-full px-2.5 sm:px-3 py-1 text-xs font-medium transition-all border flex items-center gap-1.5',
+              'shrink-0 rounded-full px-2.5 sm:px-3 py-1 text-xs font-medium transition-all border flex items-center gap-1.5 chip-hover',
               categoryFilter === id
                 ? 'bg-primary/15 text-primary border-primary/30'
                 : 'border-border/50 text-muted-foreground hover:text-foreground hover:border-border'

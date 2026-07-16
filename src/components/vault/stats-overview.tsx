@@ -2,7 +2,7 @@
 
 import { useMemo, useEffect, useRef, useState } from 'react';
 import { useVaultStore } from '@/store';
-import { Shield, KeyRound, Lock, Star, Clock, FolderOpen, TrendingUp, CalendarClock, AlertTriangle, HeartPulse } from 'lucide-react';
+import { Shield, KeyRound, Lock, Star, Clock, FolderOpen, TrendingUp, CalendarClock, AlertTriangle, HeartPulse, ShieldCheck } from 'lucide-react';
 import { CATEGORIES } from './category-tag';
 import { cn } from '@/lib/utils';
 import {
@@ -94,12 +94,14 @@ export function StatsOverview() {
     }
     const passwordHealth = healthCount > 0 ? Math.round(healthSum / healthCount) : 0;
 
-    return { total, favorites, withPassword, withUrl, withCategory, accessedRecently, expiringSoon, expired, topCategory, passwordHealth };
+    const with2FA = entries.filter((e) => e.data.totpSecret).length;
+
+    return { total, favorites, withPassword, withUrl, withCategory, accessedRecently, expiringSoon, expired, topCategory, passwordHealth, with2FA };
   }, [entries]);
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 animate-fade-in">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-9 gap-3 animate-fade-in">
         <StatCard
           icon={<KeyRound className="h-4 w-4 text-primary" />}
           label="Total Entries"
@@ -163,6 +165,13 @@ export function StatsOverview() {
           accentColor="border-l-teal-400/50 hover:bg-teal-500/5"
           tooltip="Your most used category"
         />
+        <StatCard
+          icon={<ShieldCheck className="h-4 w-4 text-emerald-400" />}
+          label="2FA Enabled"
+          value={useAnimatedCount(stats.with2FA)}
+          accentColor={stats.with2FA > 0 ? 'border-l-emerald-400/50 hover:bg-emerald-500/5' : 'opacity-50'}
+          tooltip="Entries with TOTP/2FA secret configured"
+        />
       </div>
     </TooltipProvider>
   );
@@ -211,7 +220,7 @@ function StatCard({
       <TooltipTrigger asChild>
         {card}
       </TooltipTrigger>
-      <TooltipContent side="bottom" className="text-xs">
+      <TooltipContent side="bottom" className="text-xs popover-glow">
         {tooltip}
       </TooltipContent>
     </Tooltip>

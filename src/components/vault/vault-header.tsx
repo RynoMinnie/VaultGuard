@@ -32,6 +32,7 @@ import {
   X,
   Keyboard,
   Tag,
+  Star,
 } from 'lucide-react';
 import { useVaultStore, type SortField, type SortDirection } from '@/store';
 import { CATEGORIES, type CategoryId, CategoryTag } from './category-tag';
@@ -71,6 +72,8 @@ export function VaultHeader({
     setSort,
     categoryFilter,
     setCategoryFilter,
+    favoriteFilter,
+    setFavoriteFilter,
     getCategories,
     getFilteredAndSorted,
   } = useVaultStore();
@@ -123,6 +126,18 @@ export function VaultHeader({
             <CategoryTag categoryId={categoryFilter as CategoryId} size="sm" />
             <button
               onClick={() => setCategoryFilter('')}
+              className="hover:text-foreground transition-colors"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        )}
+        {favoriteFilter && (
+          <div className="flex items-center gap-1.5">
+            <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
+            <span className="text-amber-400">Favorites</span>
+            <button
+              onClick={() => setFavoriteFilter(false)}
               className="hover:text-foreground transition-colors"
             >
               <X className="h-3 w-3" />
@@ -223,15 +238,27 @@ export function VaultHeader({
           <span className="hidden sm:inline">Filter:</span>
         </div>
         <button
-          onClick={() => setCategoryFilter('')}
+          onClick={() => { setCategoryFilter(''); setFavoriteFilter(false); }}
           className={cn(
             'shrink-0 rounded-full px-2.5 sm:px-3 py-1 text-xs font-medium transition-all border',
-            !categoryFilter
+            !categoryFilter && !favoriteFilter
               ? 'bg-primary/15 text-primary border-primary/30'
               : 'border-border/50 text-muted-foreground hover:text-foreground hover:border-border'
           )}
         >
           All
+        </button>
+        <button
+          onClick={() => setFavoriteFilter(!favoriteFilter)}
+          className={cn(
+            'shrink-0 rounded-full px-2.5 sm:px-3 py-1 text-xs font-medium transition-all border flex items-center gap-1.5',
+            favoriteFilter
+              ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
+              : 'border-border/50 text-muted-foreground hover:text-foreground hover:border-border'
+          )}
+        >
+          <Star className={cn('h-3 w-3', favoriteFilter && 'fill-amber-400')} />
+          <span className="hidden sm:inline">Favorites</span>
         </button>
         {categories.map(({ id, count }) => (
           <button

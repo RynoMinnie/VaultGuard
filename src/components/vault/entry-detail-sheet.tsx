@@ -32,6 +32,7 @@ import {
   CalendarClock,
   AlertTriangle,
   CopyX,
+  ClipboardCopy,
 } from 'lucide-react';
 import { CategoryTag, type CategoryId } from './category-tag';
 import { PasswordStrengthMeter } from './password-strength-meter';
@@ -273,6 +274,28 @@ export function EntryDetailSheet({ entry, open, onOpenChange, onEdit, onDuplicat
             >
               <CopyX className="h-4 w-4" />
               Duplicate
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 gap-1.5"
+              onClick={() => {
+                const text = [
+                  `Platform: ${data.platform}`,
+                  data.platformUrl ? `URL: ${data.platformUrl}` : '',
+                  data.username ? `Username: ${data.username}` : '',
+                  data.email ? `Email: ${data.email}` : '',
+                  data.password ? `Password: ${data.password}` : '',
+                  data.other ? `Notes: ${data.other}` : '',
+                ].filter(Boolean).join('\n');
+                navigator.clipboard.writeText(text).then(
+                  () => toast.success('All credentials copied'),
+                  () => toast.error('Failed to copy')
+                );
+              }}
+            >
+              <ClipboardCopy className="h-4 w-4" />
+              <span className="hidden sm:inline">Copy All</span>
             </Button>
             <Button
               variant="outline"

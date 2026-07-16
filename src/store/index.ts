@@ -31,6 +31,7 @@ interface VaultState {
   sortField: SortField;
   sortDirection: SortDirection;
   categoryFilter: string;
+  favoriteFilter: boolean;
   setEntries: (entries: DecryptedEntry[]) => void;
   addEntry: (entry: DecryptedEntry) => void;
   updateEntry: (id: string, entry: DecryptedEntry) => void;
@@ -42,6 +43,7 @@ interface VaultState {
   setViewMode: (mode: ViewMode) => void;
   setSort: (field: SortField, direction: SortDirection) => void;
   setCategoryFilter: (category: string) => void;
+  setFavoriteFilter: (filter: boolean) => void;
   getFilteredAndSorted: () => DecryptedEntry[];
   getCategories: () => { id: string; count: number }[];
   getRecentEntries: () => DecryptedEntry[];
@@ -92,6 +94,7 @@ export const useVaultStore = create<VaultState>((set, get) => ({
   sortField: 'updatedAt',
   sortDirection: 'desc',
   categoryFilter: '',
+  favoriteFilter: false,
   setEntries: (entries) => set({ entries }),
   addEntry: (entry) => set((state) => ({ entries: [entry, ...state.entries] })),
   updateEntry: (id, updated) =>
@@ -123,9 +126,15 @@ export const useVaultStore = create<VaultState>((set, get) => ({
   setViewMode: (mode) => set({ viewMode: mode }),
   setSort: (field, direction) => set({ sortField: field, sortDirection: direction }),
   setCategoryFilter: (category) => set({ categoryFilter: category }),
+  setFavoriteFilter: (filter) => set({ favoriteFilter: filter }),
   getFilteredAndSorted: () => {
-    const { entries, searchQuery, sortField, sortDirection, categoryFilter } = get();
+    const { entries, searchQuery, sortField, sortDirection, categoryFilter, favoriteFilter } = get();
     let filtered = entries;
+
+    // Favorite filter
+    if (favoriteFilter) {
+      filtered = filtered.filter((e) => e.data.isFavorite);
+    }
 
     // Category filter
     if (categoryFilter) {

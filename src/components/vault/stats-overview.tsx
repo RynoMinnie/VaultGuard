@@ -2,7 +2,7 @@
 
 import { useMemo, useEffect, useRef, useState } from 'react';
 import { useVaultStore } from '@/store';
-import { Shield, KeyRound, Lock, Star, Clock, FolderOpen, TrendingUp, CalendarClock, AlertTriangle } from 'lucide-react';
+import { Shield, KeyRound, Lock, Star, Clock, FolderOpen, TrendingUp, CalendarClock, AlertTriangle, HeartPulse } from 'lucide-react';
 import { CATEGORIES } from './category-tag';
 import { cn } from '@/lib/utils';
 import {
@@ -75,12 +75,31 @@ export function StatsOverview() {
     });
     const topCategory = Array.from(catMap.entries()).sort((a, b) => b[1] - a[1])[0];
 
-    return { total, favorites, withPassword, withUrl, withCategory, accessedRecently, expiringSoon, expired, topCategory };
+    // Password health
+    let healthSum = 0;
+    let healthCount = 0;
+    for (const e of entries) {
+      if (!e.data.password) continue;
+      const pw = e.data.password;
+      let s = 50;
+      if (pw.length >= 8) s += 10;
+      if (pw.length >= 12) s += 15;
+      if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) s += 10;
+      if (/[0-9]/.test(pw)) s += 10;
+      if (/[^a-zA-Z0-9]/.test(pw)) s += 10;
+      if (/password|123456|qwerty|abc123|letmein|admin|welcome|monkey/i.test(pw)) s -= 15;
+      if (/(.)\1{2,}/.test(pw)) s -= 10;
+      healthSum += Math.max(0, Math.min(100, s));
+      healthCount++;
+    }
+    const passwordHealth = healthCount > 0 ? Math.round(healthSum / healthCount) : 0;
+
+    return { total, favorites, withPassword, withUrl, withCategory, accessedRecently, expiringSoon, expired, topCategory, passwordHealth };
   }, [entries]);
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 animate-fade-in">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 animate-fade-in">
         <StatCard
           icon={<KeyRound className="h-4 w-4 text-primary" />}
           label="Total Entries"
@@ -123,6 +142,18 @@ export function StatsOverview() {
           accentColor="border-l-red-400/50 hover:bg-red-500/5"
           tooltip="Entries expiring within 7 days or already expired"
           highlight={stats.expiringSoon > 0}
+        />
+        <StatCard
+          icon={<HeartPulse className="h-4 w-4" style={{ color: stats.passwordHealth >= 70 ? 'oklch(0.7 0.15 162)' : stats.passwordHealth >= 40 ? 'oklch(0.8 0.15 85)' : 'oklch(0.7 0.2 25)' }} />}
+          label="Password Health"
+          value={`${useAnimatedCount(stats.passwordHealth)}%`}
+          accentColor={cn(
+            stats.passwordHealth >= 70 ? 'border-l-emerald-400/50 hover:bg-emerald-500/5' : '',
+            stats.passwordHealth >= 40 && stats.passwordHealth < 70 ? 'border-l-amber-400/50 hover:bg-amber-500/5' : '',
+            stats.passwordHealth < 40 && stats.passwordHealth > 0 ? 'border-l-red-400/50 hover:bg-red-500/5' : '',
+            stats.passwordHealth === 0 && 'opacity-50'
+          )}
+          tooltip="Average password strength across all entries"
         />
         <StatCard
           icon={<TrendingUp className="h-4 w-4 text-teal-400" />}

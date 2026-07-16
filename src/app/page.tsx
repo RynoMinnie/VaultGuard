@@ -19,7 +19,7 @@ import { PasswordStrengthMeter } from '@/components/vault/password-strength-mete
 import { InactivityWarning } from '@/components/vault/inactivity-warning';
 import { ImportExportDialog } from '@/components/vault/import-export-dialog';
 import { ChangePasswordDialog } from '@/components/vault/change-password-dialog';
-import { CategoryTag, type CategoryId } from '@/components/vault/category-tag';
+import { CategoryTag, type CategoryId, CATEGORIES } from '@/components/vault/category-tag';
 import { EntryDetailSheet } from '@/components/vault/entry-detail-sheet';
 import { StatsOverview } from '@/components/vault/stats-overview';
 import { Button } from '@/components/ui/button';
@@ -47,7 +47,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const APP_VERSION = 'v0.2.1';
+const APP_VERSION = 'v0.3.0';
 
 // =============== AUTH SCREEN ===============
 function AuthScreen() {
@@ -375,22 +375,27 @@ function RecentlyUsedSection() {
         <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Recently Accessed</h2>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-        {recent.map((entry) => (
-          <button
-            key={entry.id}
-            className="group flex items-center gap-2.5 rounded-lg bg-muted/30 hover:bg-muted/60 border border-border/30 hover:border-primary/20 px-3 py-2.5 text-left transition-all duration-200 hover:emerald-glow-sm"
-          >
-            <div className="h-7 w-7 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
-              <Sparkles className="h-3.5 w-3.5 text-primary/70" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-medium truncate">{entry.data.platform}</p>
-              <p className="text-[10px] text-muted-foreground/60 truncate">
-                {formatDistanceToNow(new Date(entry.data.lastAccessed), { addSuffix: true })}
-              </p>
-            </div>
-          </button>
-        ))}
+        {recent.map((entry, i) => {
+          const cat = entry.data.category;
+          const catColor = cat ? CATEGORIES.find(c => c.id === cat)?.color.split(' ')[0] : '';
+          return (
+            <button
+              key={entry.id}
+              className="group flex items-center gap-2.5 rounded-lg bg-muted/30 hover:bg-muted/60 border border-border/30 hover:border-primary/20 px-3 py-2.5 text-left transition-all duration-200 hover:emerald-glow-sm hover:scale-[1.02] animate-slide-up"
+              style={{ animationDelay: `${i * 0.05}s`, borderLeftWidth: '3px', borderLeftColor: catColor ? undefined : 'transparent' }}
+            >
+              <div className="h-7 w-7 rounded-md bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+                <Sparkles className="h-3.5 w-3.5 text-primary/70" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium truncate">{entry.data.platform}</p>
+                <p className="text-[10px] text-muted-foreground/60 truncate">
+                  {formatDistanceToNow(new Date(entry.data.lastAccessed), { addSuffix: true })}
+                </p>
+              </div>
+            </button>
+          );
+        })}
       </div>
       <Separator className="mt-4 opacity-40" />
     </div>
@@ -531,7 +536,7 @@ function VaultScreen() {
       onClick={useTimeoutStore.getState().resetTimer}
     >
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-border/40 glass-strong">
+      <header className="sticky top-0 z-40 border-b border-border/40 glass-strong header-glow-line">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
@@ -574,17 +579,21 @@ function VaultScreen() {
             <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-2'}>
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="space-y-3 rounded-xl border border-border/30 p-4">
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-8 w-full" />
-                  <Skeleton className="h-8 w-full" />
-                  <Skeleton className="h-8 w-2/3" />
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-8 w-8 rounded-lg skeleton-shimmer" />
+                    <Skeleton className="h-4 w-2/5 skeleton-shimmer" />
+                  </div>
+                  <Skeleton className="h-8 w-full rounded-md skeleton-shimmer" />
+                  <Skeleton className="h-8 w-full rounded-md skeleton-shimmer" />
+                  <Skeleton className="h-8 w-3/4 rounded-md skeleton-shimmer" />
+                  <Skeleton className="h-3 w-1/2 skeleton-shimmer" />
                 </div>
               ))}
             </div>
           ) : filteredEntries.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 text-center animate-fade-in">
               <div className="relative mb-6">
-                <div className="w-24 h-24 rounded-3xl bg-muted/30 flex items-center justify-center float-animate">
+                <div className="w-24 h-24 rounded-3xl bg-muted/30 flex items-center justify-center float-animate empty-pulse-ring">
                   <VaultIcon className="h-12 w-12 text-muted-foreground/20" />
                 </div>
                 <div className="absolute -inset-4 rounded-[2rem] bg-primary/5 blur-xl -z-10" />
@@ -598,7 +607,13 @@ function VaultScreen() {
                   : 'Add your first password entry to start building your secure vault.'}
               </p>
               {!searchQuery && (
-                <Button onClick={handleAddEntry} className="mt-6 shadow-lg shadow-primary/20">
+                <p className="text-[10px] text-muted-foreground/30 mt-1 flex items-center gap-1">
+                  <Shield className="h-3 w-3" />
+                  All passwords encrypted with AES-256-GCM
+                </p>
+              )}
+              {!searchQuery && (
+                <Button onClick={handleAddEntry} className="mt-5 btn-gradient-primary">
                   <Sparkles className="h-4 w-4 mr-2" />
                   Add Your First Entry
                   <ChevronRight className="h-4 w-4 ml-1" />

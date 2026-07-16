@@ -374,3 +374,116 @@ select:focus-visible,
 .auth-loading-icon {
   animation: vault-unlock 1.2s ease-in-out infinite;
 }
+
+/* ============ HEADER GLOW LINE ============ */
+.header-glow-line {
+  position: relative;
+}
+.header-glow-line::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    oklch(0.696 0.17 162.48 / 40%) 20%,
+    oklch(0.65 0.15 175 / 60%) 50%,
+    oklch(0.696 0.17 162.48 / 40%) 80%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: header-glow-slide 4s ease-in-out infinite;
+}
+
+@keyframes header-glow-slide {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+/* ============ CARD GRADIENT HOVER ============ */
+.card-gradient-hover {
+  position: relative;
+}
+.card-gradient-hover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    oklch(0.696 0.17 162.48 / 0%),
+    oklch(0.65 0.15 175 / 0%),
+    oklch(0.696 0.17 162.48 / 0%)
+  );
+  background-size: 200% 200%;
+  transition: background 0.4s ease;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0;
+}
+.card-gradient-hover:hover::before {
+  opacity: 1;
+  background: linear-gradient(
+    135deg,
+    oklch(0.696 0.17 162.48 / 50%),
+    oklch(0.65 0.15 175 / 30%),
+    oklch(0.696 0.17 162.48 / 50%)
+  );
+  background-size: 200% 200%;
+  animation: gradient-border 4s ease infinite;
+}
+
+/* ============ DIALOG OVERLAY GLOW ============ */
+[data-state="open"] > [data-radix-overlay] {
+  background: oklch(0 0 0 / 60%) !important;
+  backdrop-filter: blur(4px);
+}
+
+/* ============ ENHANCED SHIMMER SKELETON ============ */
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    oklch(0.22 0.012 155 / 30%) 0%,
+    oklch(0.22 0.012 155 / 50%) 50%,
+    oklch(0.22 0.012 155 / 30%) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* ============ EMPTY STATE PULSE RING ============ */
+@keyframes empty-pulse-ring {
+  0% { box-shadow: 0 0 0 0 oklch(0.696 0.17 162.48 / 15%); }
+  70% { box-shadow: 0 0 0 20px oklch(0.696 0.17 162.48 / 0%); }
+  100% { box-shadow: 0 0 0 0 oklch(0.696 0.17 162.48 / 0%); }
+}
+
+.empty-pulse-ring {
+  animation: empty-pulse-ring 2.5s ease-out infinite;
+}
+
+/* ============ GRADIENT BUTTON ============ */
+.btn-gradient-primary {
+  background: linear-gradient(135deg, oklch(0.696 0.17 162.48), oklch(0.65 0.15 175));
+  transition: all 0.2s ease;
+}
+.btn-gradient-primary:hover {
+  box-shadow: 0 4px 20px oklch(0.696 0.17 162.48 / 30%);
+  transform: translateY(-1px);
+}
+
+/* ============ SCROLLBAR NONE ============ */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

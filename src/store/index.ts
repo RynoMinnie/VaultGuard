@@ -32,18 +32,23 @@ interface VaultState {
   sortDirection: SortDirection;
   categoryFilter: string;
   favoriteFilter: boolean;
+  selectedIds: Set<string>;
   setEntries: (entries: DecryptedEntry[]) => void;
   addEntry: (entry: DecryptedEntry) => void;
   updateEntry: (id: string, entry: DecryptedEntry) => void;
   touchEntry: (id: string) => void;
   toggleFavorite: (id: string) => void;
   removeEntry: (id: string) => void;
+  removeEntries: (ids: string[]) => void;
   setLoading: (loading: boolean) => void;
   setSearchQuery: (query: string) => void;
   setViewMode: (mode: ViewMode) => void;
   setSort: (field: SortField, direction: SortDirection) => void;
   setCategoryFilter: (category: string) => void;
   setFavoriteFilter: (filter: boolean) => void;
+  toggleSelect: (id: string) => void;
+  toggleSelectAll: (ids: string[]) => void;
+  clearSelection: () => void;
   getFilteredAndSorted: () => DecryptedEntry[];
   getCategories: () => { id: string; count: number }[];
   getRecentEntries: () => DecryptedEntry[];
@@ -95,7 +100,8 @@ export const useVaultStore = create<VaultState>((set, get) => ({
   sortDirection: 'desc',
   categoryFilter: '',
   favoriteFilter: false,
-  setEntries: (entries) => set({ entries }),
+  selectedIds: new Set<string>(),
+  setEntries: (entries) => set({ entries, selectedIds: new Set<string>() }),
   addEntry: (entry) => set((state) => ({ entries: [entry, ...state.entries] })),
   updateEntry: (id, updated) =>
     set((state) => ({
@@ -120,13 +126,41 @@ export const useVaultStore = create<VaultState>((set, get) => ({
   removeEntry: (id) =>
     set((state) => ({
       entries: state.entries.filter((e) => e.id !== id),
+      selectedIds: new Set([...state.selectedIds].filter((sid) => sid !== id)),
     })),
+  removeEntries: (ids) =>
+    set((state) => {
+      const idSet = new Set(ids);
+      return {
+        entries: state.entries.filter((e) => !idSet.has(e.id)),
+        selectedIds: new Set(),
+      };
+    }),
   setLoading: (loading) => set({ isLoading: loading }),
   setSearchQuery: (query) => set({ searchQuery: query }),
   setViewMode: (mode) => set({ viewMode: mode }),
   setSort: (field, direction) => set({ sortField: field, sortDirection: direction }),
   setCategoryFilter: (category) => set({ categoryFilter: category }),
-  setFavoriteFilter: (filter) => set({ favoriteFilter: filter }),
+  setFavoriteFilter: (filter) => set({ favoriteFilter: filter, selectedIds: new Set<string>() }),
+  toggleSelect: (id) =>
+    set((state) => {
+      const next = new Set(state.selectedIds);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return { selectedIds: next };
+    }),
+  toggleSelectAll: (ids) =>
+    set((state) => {
+      const allSelected = ids.every((id) => state.selectedIds.has(id));
+      if (allSelected) {
+        return { selectedIds: new Set<string>() };
+      }
+      return { selectedIds: new Set(ids) };
+    }),
+  clearSelection: () => set({ selectedIds: new Set<string>() }),
   getFilteredAndSorted: () => {
     const { entries, searchQuery, sortField, sortDirection, categoryFilter, favoriteFilter } = get();
     let filtered = entries;

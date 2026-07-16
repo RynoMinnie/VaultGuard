@@ -44,6 +44,9 @@ import {
   Clock,
   Sparkles,
   Fingerprint,
+  Trash2,
+  CheckSquare,
+  Square,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -406,7 +409,7 @@ function RecentlyUsedSection() {
 // =============== VAULT SCREEN ===============
 function VaultScreen() {
   const { token, encryptionKey, username, logout } = useAuthStore();
-  const { entries, isLoading, setLoading, setEntries, addEntry, updateEntry, removeEntry, getFilteredAndSorted, viewMode, searchQuery } =
+  const { entries, isLoading, setLoading, setEntries, addEntry, updateEntry, removeEntry, removeEntries, getFilteredAndSorted, viewMode, searchQuery, selectedIds, toggleSelect, toggleSelectAll, clearSelection } =
     useVaultStore();
 
   const [formOpen, setFormOpen] = useState(false);
@@ -527,6 +530,28 @@ function VaultScreen() {
   };
 
   const filteredEntries = getFilteredAndSorted();
+  const hasSelection = selectedIds.size > 0;
+  const selectedCount = selectedIds.size;
+  const allSelected = filteredEntries.length > 0 && filteredEntries.every((e) => selectedIds.has(e.id));
+
+  const handleBulkDelete = async () => {
+    if (!token) return;
+    try {
+      const ids = Array.from(selectedIds);
+      await Promise.all(
+        ids.map((id) =>
+          fetch(`/api/vault/entries/${id}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` },
+          })
+        )
+      );
+      removeEntries(ids);
+      toast.success(`Deleted ${ids.length} entries`);
+    } catch {
+      toast.error('Failed to delete some entries');
+    }
+  };
 
   return (
     <div
@@ -580,12 +605,17 @@ function VaultScreen() {
         {hasSelection && (
           <div className="flex items-center gap-2 mb-3 p-2.5 rounded-xl border border-primary/20 bg-primary/5 animate-slide-up">
             <div className="flex items-center gap-1.5 text-sm">
-              <input
-                type="checkbox"
-                checked={allSelected}
-                onChange={toggleSelectAll}
-                className="h-4 w-4 rounded border-primary/40 accent-primary"
-              />
+              <button
+                onClick={() => toggleSelectAll(filteredEntries.map((e) => e.id))}
+                className="h-5 w-5 flex items-center justify-center"
+                title={allSelected ? 'Deselect all' : 'Select all'}
+              >
+                {allSelected ? (
+                  <CheckSquare className="h-5 w-5 text-primary" />
+                ) : (
+                  <Square className="h-5 w-5 text-muted-foreground/50" />
+                )}
+              </button>
               <span className="text-primary font-medium">
                 {selectedCount} selected
               </span>
@@ -594,12 +624,7 @@ function VaultScreen() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => {
-                if (confirm(`Delete ${selectedCount} selected entries?`)) {
-                  removeEntries(Array.from(selectedIds));
-                  toast.success(`Deleted ${selectedCount} entries`);
-                }
-              }}
+              onClick={handleBulkDelete}
               className="h-8 gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10"
             >
               <Trash2 className="h-3.5 w-3.5" />

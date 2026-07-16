@@ -2,7 +2,7 @@
 
 import { useMemo, useEffect, useRef, useState } from 'react';
 import { useVaultStore } from '@/store';
-import { Shield, KeyRound, Lock, Star, Clock, FolderOpen, TrendingUp, CalendarClock, AlertTriangle, HeartPulse, ShieldCheck } from 'lucide-react';
+import { Shield, KeyRound, Lock, Star, Clock, FolderOpen, TrendingUp, CalendarClock, AlertTriangle, HeartPulse, ShieldCheck, Tags } from 'lucide-react';
 import { CATEGORIES } from './category-tag';
 import { cn } from '@/lib/utils';
 import {
@@ -96,12 +96,20 @@ export function StatsOverview() {
 
     const with2FA = entries.filter((e) => e.data.totpSecret).length;
 
-    return { total, favorites, withPassword, withUrl, withCategory, accessedRecently, expiringSoon, expired, topCategory, passwordHealth, with2FA };
+    // Unique tags count
+    const tagSet = new Set<string>();
+    entries.forEach((e) => {
+      const raw = e.data.tags || '';
+      raw.split(',').map((t) => t.trim()).filter(Boolean).forEach((t) => tagSet.add(t));
+    });
+    const uniqueTags = tagSet.size;
+
+    return { total, favorites, withPassword, withUrl, withCategory, accessedRecently, expiringSoon, expired, topCategory, passwordHealth, with2FA, uniqueTags };
   }, [entries]);
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-9 gap-3 animate-fade-in">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 animate-fade-in">
         <StatCard
           icon={<KeyRound className="h-4 w-4 text-primary" />}
           label="Total Entries"
@@ -171,6 +179,13 @@ export function StatsOverview() {
           value={useAnimatedCount(stats.with2FA)}
           accentColor={stats.with2FA > 0 ? 'border-l-emerald-400/50 hover:bg-emerald-500/5' : 'opacity-50'}
           tooltip="Entries with TOTP/2FA secret configured"
+        />
+        <StatCard
+          icon={<Tags className="h-4 w-4 text-teal-400" />}
+          label="Tags Used"
+          value={useAnimatedCount(stats.uniqueTags)}
+          accentColor="border-l-teal-400/50 hover:bg-teal-500/5"
+          tooltip="Unique tags across all entries"
         />
       </div>
     </TooltipProvider>

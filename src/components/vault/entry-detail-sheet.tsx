@@ -35,6 +35,8 @@ import {
   ClipboardCopy,
   KeyRound,
   History,
+  Tags,
+  TrendingUp,
 } from 'lucide-react';
 import { CategoryTag, type CategoryId } from './category-tag';
 import { PasswordStrengthMeter } from './password-strength-meter';
@@ -42,6 +44,7 @@ import { useVaultStore, type DecryptedEntry } from '@/store';
 import type { PasswordHistoryEntry } from '@/lib/crypto';
 import { toast } from 'sonner';
 import { format, formatDistanceToNow } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface EntryDetailSheetProps {
   entry: DecryptedEntry | null;
@@ -340,6 +343,28 @@ export function EntryDetailSheet({ entry, open, onOpenChange, onEdit, onDuplicat
               onToggle={() => { setShowPassword(!showPassword); if (!showPassword) touchEntry(id); }}
             />
             <DetailField icon={<FileText className="h-4 w-4" />} label="Notes" value={data.other || '—'} multiline />
+            {data.tags && (
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground/60 flex items-center gap-1.5">
+                  <Tags className="h-4 w-4" />
+                  Tags
+                </label>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {data.tags.split(',').map((t, i) => {
+                    const trimmed = t.trim();
+                    if (!trimmed) return null;
+                    return (
+                      <span
+                        key={i}
+                        className="inline-flex items-center rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 px-2.5 py-0.5 text-[11px] font-medium"
+                      >
+                        {trimmed}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             {data.totpSecret && (
               <div className="space-y-1.5">
                 <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground/60 flex items-center gap-1.5">
@@ -391,6 +416,8 @@ export function EntryDetailSheet({ entry, open, onOpenChange, onEdit, onDuplicat
                 <History className="h-3.5 w-3.5" />
                 Password History
               </h4>
+              {/* Strength Trend */}
+              <StrengthTrend currentPassword={data.password} history={data.passwordHistory} />
               <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
                 {data.passwordHistory.slice(-5).reverse().map((hEntry: PasswordHistoryEntry, idx: number) => (
                   <PasswordHistoryItem key={idx} entry={hEntry} />
@@ -434,6 +461,87 @@ export function EntryDetailSheet({ entry, open, onOpenChange, onEdit, onDuplicat
         </div>
       </SheetContent>
     </Sheet>
+  );
+}
+
+function calculateStrengthScore(password: string): number {
+  if (!password) return 0;
+  let s = 50;
+  if (password.length >= 8) s += 10;
+  if (password.length >= 12) s += 15;
+  if (/[A-Z]/.test(password) && /[a-z]/.test(password)) s += 10;
+  if (/[0-9]/.test(password)) s += 10;
+  if (/[^a-zA-Z0-9]/.test(password)) s += 10;
+  if (/password|123456|qwerty|abc123|letmein|admin|welcome|monkey/i.test(password)) s -= 15;
+  if (/(.)\1{2,}/.test(password)) s -= 10;
+  return Math.max(0, Math.min(100, s));
+}
+
+function getBarColor(score: number): string {
+  if (score >= 70) return 'bg-emerald-500';
+  if (score >= 40) return 'bg-amber-500';
+  return 'bg-red-500';
+}
+
+function getBarGlow(score: number): string {
+  if (score >= 70) return 'shadow-emerald-500/30';
+  if (score >= 40) return 'shadow-amber-500/30';
+  return 'shadow-red-500/30';
+}
+
+function StrengthTrend({ currentPassword, history }: { currentPassword: string; history: PasswordHistoryEntry[] }) {
+  const items = useMemo(() => {
+    const result = history.slice(-5).map((h) => ({
+      password: h.password,
+      timestamp: h.timestamp,
+      score: calculateStrengthScore(h.password),
+      isCurrent: false,
+    }));
+    result.push({
+      password: currentPassword,
+      timestamp: new Date().toISOString(),
+      score: calculateStrengthScore(currentPassword),
+      isCurrent: true,
+    });
+    return result;
+  }, [currentPassword, history]);
+
+  // Only show if 2+ entries
+  if (items.length < 2) return null;
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+        <TrendingUp className="h-3 w-3" />
+        <span>Strength Trend</span>
+      </div>
+      <div className="space-y-1.5">
+        {items.map((item, idx) => (
+          <div key={idx} className="flex items-center gap-2 group/trend">
+            <span className="text-[10px] text-muted-foreground/60 w-14 shrink-0 tabular-nums">
+              {format(new Date(item.timestamp), 'MMM d')}
+            </span>
+            <div className="flex-1 h-3.5 rounded-full bg-muted/40 overflow-hidden">
+              <div
+                className={cn(
+                  'h-full rounded-full transition-all duration-700 ease-out shadow-sm',
+                  getBarColor(item.score),
+                  getBarGlow(item.score),
+                  item.isCurrent && 'ring-1 ring-foreground/20 ring-offset-1 ring-offset-background'
+                )}
+                style={{ width: `${Math.max(item.score, 2)}%` }}
+              />
+            </div>
+            <span className={cn(
+              'text-[10px] tabular-nums w-8 text-right shrink-0 font-medium',
+              item.score >= 70 ? 'text-emerald-400' : item.score >= 40 ? 'text-amber-400' : 'text-red-400'
+            )}>
+              {item.score}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 

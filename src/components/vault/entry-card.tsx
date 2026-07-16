@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,7 +30,6 @@ import {
   Trash2,
   Eye,
   EyeOff,
-  Globe,
   User,
   Mail,
   Lock,
@@ -44,6 +43,8 @@ import {
   FileText,
   ChevronDown,
 } from 'lucide-react';
+import { PlatformIconDisplay } from '@/lib/platform-icons';
+import { calculateStrength } from './password-strength-meter';
 import { CategoryTag } from './category-tag';
 import { cn } from '@/lib/utils';
 import type { DecryptedEntry } from '@/store';
@@ -135,6 +136,7 @@ export function EntryCard({ entry, onEdit, onDuplicate, onDelete, onView }: Entr
   const { data } = entry;
   const isFav = data.isFavorite;
   const isSelected = selectedIds.has(entry.id);
+  const strengthScore = useMemo(() => data.password ? calculateStrength(data.password).score * (100 / 8) : 0, [data.password]);
 
   const handleCardClick = () => {
     touchEntry(entry.id);
@@ -159,7 +161,7 @@ export function EntryCard({ entry, onEdit, onDuplicate, onDelete, onView }: Entr
       <ContextMenuTrigger>
         <Card
           className={cn(
-            "group border-border/50 bg-card/70 backdrop-blur-sm hover:border-primary/30 hover:emerald-glow-sm card-hover-lift transition-all duration-300 animate-scale-in cursor-pointer",
+            "group border-border/50 bg-card/70 backdrop-blur-sm hover:border-primary/30 hover:emerald-glow-sm card-hover-lift border-glow-subtle transition-all duration-300 animate-scale-in cursor-pointer",
             isSelected && "card-selected"
           )}
         >
@@ -189,7 +191,7 @@ export function EntryCard({ entry, onEdit, onDuplicate, onDelete, onView }: Entr
               >
                 <div className="flex items-center gap-2">
                   <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
-                    <Globe className="h-4 w-4 text-primary" />
+                    <PlatformIconDisplay platform={data.platform} className="h-4 w-4 text-primary" />
                   </div>
                   <div className="min-w-0">
                     <h3 className="font-semibold text-sm truncate">{data.platform}</h3>
@@ -283,6 +285,24 @@ export function EntryCard({ entry, onEdit, onDuplicate, onDelete, onView }: Entr
               </div>
             )}
 
+            {/* Tags row */}
+            {data.tags && (
+              <div className="flex items-center gap-1.5 flex-wrap pl-1">
+                {data.tags.split(',').map((t, i) => {
+                  const trimmed = t.trim();
+                  if (!trimmed) return null;
+                  return (
+                    <span
+                      key={i}
+                      className="inline-flex items-center rounded-full bg-emerald-500/15 text-emerald-400/80 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-medium"
+                    >
+                      {trimmed}
+                    </span>
+                  );
+                })}
+              </div>
+            )}
+
             {/* Fields */}
             <div className="space-y-1.5 text-xs">
               {data.username && (
@@ -308,6 +328,21 @@ export function EntryCard({ entry, onEdit, onDuplicate, onDelete, onView }: Entr
                   title="Click to reveal & copy password"
                 >
                   <Lock className="h-3.5 w-3.5 text-primary/60 shrink-0" />
+                  <span
+                    className="strength-dot shrink-0"
+                    style={{
+                      background: strengthScore >= 70
+                        ? 'oklch(0.7 0.15 162)'
+                        : strengthScore >= 40
+                          ? 'oklch(0.8 0.15 85)'
+                          : 'oklch(0.7 0.2 25)',
+                      boxShadow: strengthScore >= 70
+                        ? '0 0 4px oklch(0.7 0.15 162 / 40%)'
+                        : strengthScore >= 40
+                          ? '0 0 4px oklch(0.8 0.15 85 / 40%)'
+                          : '0 0 4px oklch(0.7 0.2 25 / 40%)',
+                    }}
+                  />
                   <span className="truncate flex-1 font-mono text-foreground/80">
                     {showPassword ? data.password : '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'}
                   </span>
@@ -337,7 +372,10 @@ export function EntryCard({ entry, onEdit, onDuplicate, onDelete, onView }: Entr
             {/* Notes preview */}
             {data.other && (
               <div
-                className="flex items-start gap-1.5 text-[11px] text-muted-foreground/60 italic cursor-pointer select-none hover:text-muted-foreground/80 transition-colors"
+                className={cn(
+                  "flex items-start gap-1.5 text-[11px] text-muted-foreground/60 italic cursor-pointer select-none hover:text-muted-foreground/80 transition-colors",
+                  notesExpanded && "notes-expanded"
+                )}
                 onClick={(e) => { e.stopPropagation(); setNotesExpanded(!notesExpanded); }}
               >
                 <FileText className="h-3 w-3 shrink-0 mt-0.5" />

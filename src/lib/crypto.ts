@@ -22,6 +22,7 @@ export interface VaultEntryData {
   expiryDate: string;
   totpSecret: string;
   passwordHistory: PasswordHistoryEntry[];
+  tags: string;
 }
 
 const PBKDF2_ITERATIONS = 600000;

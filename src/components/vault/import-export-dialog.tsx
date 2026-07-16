@@ -77,7 +77,7 @@ export function ImportExportDialog({ mode, open, onOpenChange }: ImportExportDia
   };
 
   const handleCsvExport = () => {
-    const headers = ['Platform', 'URL', 'Username', 'Email', 'Password', 'Category', 'Notes', 'Expiry Date', 'TOTP Secret', 'Favorite', 'Created', 'Updated'];
+    const headers = ['Platform', 'URL', 'Username', 'Email', 'Password', 'Category', 'Notes', 'Expiry Date', 'TOTP Secret', 'Favorite', 'Created', 'Updated', 'Tags'];
     const rows = entries.map(e => [
       e.data.platform,
       e.data.platformUrl,
@@ -91,6 +91,7 @@ export function ImportExportDialog({ mode, open, onOpenChange }: ImportExportDia
       e.data.isFavorite ? 'Yes' : 'No',
       e.createdAt,
       e.updatedAt,
+      e.data.tags || '',
     ].map(field => `"${String(field).replace(/"/g, '""')}"`).join(','));
 
     const csv = [headers.join(','), ...rows].join('\n');
@@ -187,6 +188,7 @@ export function ImportExportDialog({ mode, open, onOpenChange }: ImportExportDia
           expiryDate: row['Expiry Date'] || '',
           totpSecret: row['TOTP Secret'] || '',
           passwordHistory: [],
+          tags: row['Tags'] || '',
         };
 
         const { encryptedData, iv } = await encryptEntry(entryData, encryptionKey);

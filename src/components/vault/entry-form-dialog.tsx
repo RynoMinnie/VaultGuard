@@ -22,7 +22,7 @@ import { encryptEntry } from '@/lib/crypto';
 import type { VaultEntryData } from '@/lib/crypto';
 import type { DecryptedEntry } from '@/store';
 import { toast } from 'sonner';
-import { Loader2, Save, Tag, CalendarClock, KeyRound, ShieldCheck } from 'lucide-react';
+import { Loader2, Save, Tag, Tags, X, CalendarClock, KeyRound, ShieldCheck } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 interface EntryFormDialogProps {
@@ -46,6 +46,7 @@ const emptyData: VaultEntryData = {
   expiryDate: '',
   totpSecret: '',
   passwordHistory: [],
+  tags: '',
 };
 
 export function EntryFormDialog({
@@ -220,6 +221,47 @@ export function EntryFormDialog({
               value={data.category as CategoryId}
               onChange={(v) => updateField('category', v)}
             />
+          </div>
+
+          {/* Tags */}
+          <div className="space-y-2.5">
+            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+              <Tags className="h-3 w-3" />
+              Tags
+            </Label>
+            <Input
+              value={data.tags}
+              onChange={(e) => updateField('tags', e.target.value)}
+              placeholder="work, personal, shared..."
+              className="h-10"
+            />
+            {data.tags && (
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {data.tags.split(',').map((t, i) => {
+                  const trimmed = t.trim();
+                  if (!trimmed) return null;
+                  return (
+                    <span
+                      key={i}
+                      className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 px-2 py-0.5 text-[11px] font-medium"
+                    >
+                      {trimmed}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const tagsArr = data.tags.split(',').map((s) => s.trim()).filter(Boolean);
+                          tagsArr.splice(i, 1);
+                          updateField('tags', tagsArr.join(', '));
+                        }}
+                        className="hover:text-emerald-300 transition-colors"
+                      >
+                        <X className="h-2.5 w-2.5" />
+                      </button>
+                    </span>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <Separator className="opacity-50" />

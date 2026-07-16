@@ -16,7 +16,7 @@ interface StrengthLevel {
   score: number;
 }
 
-function calculateStrength(password: string): StrengthLevel {
+export function calculateStrength(password: string): StrengthLevel {
   if (!password) {
     return { label: '', color: '', bgColor: '', width: '0%', score: 0 };
   }

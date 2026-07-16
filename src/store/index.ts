@@ -32,6 +32,7 @@ interface VaultState {
   sortDirection: SortDirection;
   categoryFilter: string;
   favoriteFilter: boolean;
+  tagFilter: string;
   selectedIds: Set<string>;
   setEntries: (entries: DecryptedEntry[]) => void;
   addEntry: (entry: DecryptedEntry) => void;
@@ -46,11 +47,13 @@ interface VaultState {
   setSort: (field: SortField, direction: SortDirection) => void;
   setCategoryFilter: (category: string) => void;
   setFavoriteFilter: (filter: boolean) => void;
+  setTagFilter: (tag: string) => void;
   toggleSelect: (id: string) => void;
   toggleSelectAll: (ids: string[]) => void;
   clearSelection: () => void;
   getFilteredAndSorted: () => DecryptedEntry[];
   getCategories: () => { id: string; count: number }[];
+  getTags: () => { tag: string; count: number }[];
   getRecentEntries: () => DecryptedEntry[];
 }
 
@@ -100,6 +103,7 @@ export const useVaultStore = create<VaultState>((set, get) => ({
   sortDirection: 'desc',
   categoryFilter: '',
   favoriteFilter: false,
+  tagFilter: '',
   selectedIds: new Set<string>(),
   setEntries: (entries) => set({ entries, selectedIds: new Set<string>() }),
   addEntry: (entry) => set((state) => ({ entries: [entry, ...state.entries] })),
@@ -142,6 +146,7 @@ export const useVaultStore = create<VaultState>((set, get) => ({
   setSort: (field, direction) => set({ sortField: field, sortDirection: direction }),
   setCategoryFilter: (category) => set({ categoryFilter: category }),
   setFavoriteFilter: (filter) => set({ favoriteFilter: filter, selectedIds: new Set<string>() }),
+  setTagFilter: (tag) => set({ tagFilter: tag, selectedIds: new Set<string>() }),
   toggleSelect: (id) =>
     set((state) => {
       const next = new Set(state.selectedIds);
@@ -162,7 +167,7 @@ export const useVaultStore = create<VaultState>((set, get) => ({
     }),
   clearSelection: () => set({ selectedIds: new Set<string>() }),
   getFilteredAndSorted: () => {
-    const { entries, searchQuery, sortField, sortDirection, categoryFilter, favoriteFilter } = get();
+    const { entries, searchQuery, sortField, sortDirection, categoryFilter, favoriteFilter, tagFilter } = get();
     let filtered = entries;
 
     // Favorite filter
@@ -173,6 +178,14 @@ export const useVaultStore = create<VaultState>((set, get) => ({
     // Category filter
     if (categoryFilter) {
       filtered = filtered.filter((e) => e.data.category === categoryFilter);
+    }
+
+    // Tag filter
+    if (tagFilter) {
+      filtered = filtered.filter((e) => {
+        const tags = (e.data.tags || '').split(',').map((t) => t.trim().toLowerCase());
+        return tags.includes(tagFilter.toLowerCase());
+      });
     }
 
     // Search filter
@@ -188,6 +201,7 @@ export const useVaultStore = create<VaultState>((set, get) => ({
           d.password.toLowerCase().includes(q) ||
           d.other.toLowerCase().includes(q) ||
           d.category.toLowerCase().includes(q) ||
+          (d.tags && d.tags.toLowerCase().includes(q)) ||
           (d.totpSecret && d.totpSecret.toLowerCase().includes(q))
         );
       });
@@ -222,6 +236,20 @@ export const useVaultStore = create<VaultState>((set, get) => ({
     }
     return Array.from(map.entries())
       .map(([id, count]) => ({ id, count }))
+      .sort((a, b) => b.count - a.count);
+  },
+  getTags: () => {
+    const { entries } = get();
+    const map = new Map<string, number>();
+    for (const e of entries) {
+      const raw = e.data.tags || '';
+      const tags = raw.split(',').map((t) => t.trim()).filter(Boolean);
+      for (const tag of tags) {
+        map.set(tag, (map.get(tag) || 0) + 1);
+      }
+    }
+    return Array.from(map.entries())
+      .map(([tag, count]) => ({ tag, count }))
       .sort((a, b) => b.count - a.count);
   },
   getRecentEntries: () => {

@@ -23,6 +23,7 @@ import {
   EyeOff,
   FileText,
 } from 'lucide-react';
+import { PlatformIconDisplay } from '@/lib/platform-icons';
 import type { DecryptedEntry } from '@/store';
 import { cn } from '@/lib/utils';
 
@@ -81,7 +82,7 @@ export function EntryRow({ entry, onEdit, onDelete }: EntryRowProps) {
   return (
     <div
       className={cn(
-        "group flex items-center gap-3 rounded-lg border border-border/40 bg-card/50 hover:bg-card/80 hover:border-primary/20 px-4 py-3 transition-all duration-200 cursor-pointer",
+        "group flex items-center gap-3 rounded-lg border border-border/40 bg-card/50 hover:bg-card/80 hover:border-primary/20 px-4 py-3 border-glow-subtle transition-all duration-200 cursor-pointer row-hover-accent",
         isSelected && 'border-primary/40 bg-primary/5 row-selected'
       )}
       onClick={() => touchEntry(entry.id)}
@@ -103,6 +104,9 @@ export function EntryRow({ entry, onEdit, onDelete }: EntryRowProps) {
       </button>
       {/* Platform + Category */}
       <div className="flex-1 min-w-0 flex items-center gap-2">
+        <div className="h-6 w-6 rounded-md bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/15 transition-colors">
+          <PlatformIconDisplay platform={data.platform} className="h-3.5 w-3.5 text-primary" />
+        </div>
         <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-medium text-sm truncate">{data.platform}</span>

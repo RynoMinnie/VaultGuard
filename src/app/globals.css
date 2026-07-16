@@ -829,3 +829,247 @@ select:focus-visible,
 .number-flash {
   animation: number-flash 0.6s ease-out;
 }
+
+/* ============ SLIDING TAB INDICATOR ============ */
+.tab-indicator {
+  position: relative;
+}
+.tab-indicator::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: oklch(0.696 0.17 162.48);
+  border-radius: 1px 1px 0 0;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ============ REQUIREMENT CHECKLIST ============ */
+@keyframes check-appear {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.req-check-item {
+  animation: check-appear 0.2s ease-out both;
+}
+.req-check-item:nth-child(1) { animation-delay: 0.02s; }
+.req-check-item:nth-child(2) { animation-delay: 0.06s; }
+.req-check-item:nth-child(3) { animation-delay: 0.10s; }
+.req-check-item:nth-child(4) { animation-delay: 0.14s; }
+
+/* ============ BREATHING GLOW ============ */
+@keyframes breathe-glow {
+  0%, 100% { box-shadow: 0 0 20px oklch(0.696 0.17 162.48 / 10%), 0 0 60px oklch(0.696 0.17 162.48 / 5%); }
+  50% { box-shadow: 0 0 30px oklch(0.696 0.17 162.48 / 20%), 0 0 80px oklch(0.696 0.17 162.48 / 10%); }
+}
+.breathe-glow {
+  animation: breathe-glow 4s ease-in-out infinite;
+}
+
+/* ============ INPUT GROUP STYLES ============ */
+.input-group {
+  position: relative;
+}
+.input-group input {
+  padding-right: 2.5rem;
+}
+.input-group .toggle-btn {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: opacity 0.2s ease;
+  opacity: 0.5;
+}
+.input-group .toggle-btn:hover {
+  opacity: 1;
+}
+
+/* ============ TAG CHIP ============ */
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 500;
+  background: oklch(0.696 0.17 162.48 / 10%);
+  color: oklch(0.696 0.17 162.48);
+  border: 1px solid oklch(0.696 0.17 162.48 / 15%);
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.tag-chip:hover {
+  background: oklch(0.696 0.17 162.48 / 18%);
+  border-color: oklch(0.696 0.17 162.48 / 25%);
+}
+
+/* ============ STRENGTH BAR ============ */
+.strength-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: oklch(0.22 0.012 155 / 50%);
+  overflow: hidden;
+  position: relative;
+}
+.strength-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s ease;
+}
+
+/* ============ FADE IN UP STAGGER ============ */
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in-up {
+  animation: fade-in-up 0.4s ease-out both;
+}
+
+/* ============ SUBTLE BORDER GLOW ============ */
+.border-glow-subtle {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.border-glow-subtle:hover {
+  border-color: oklch(0.696 0.17 162.48 / 25%);
+  box-shadow: 0 0 0 1px oklch(0.696 0.17 162.48 / 8%);
+}
+
+/* ============ TEXT GLOW ============ */
+.text-glow-emerald {
+  text-shadow: 0 0 12px oklch(0.696 0.17 162.48 / 30%);
+}
+
+/* ============ LOADING SKELETON CARD ============ */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.7; }
+}
+.skeleton-card {
+  background: oklch(0.22 0.012 155 / 30%);
+  border-radius: 12px;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+/* ============ ICON SPIN ============ */
+@keyframes icon-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.icon-spin {
+  animation: icon-spin 1s linear infinite;
+}
+
+/* ============ TOOLTIP ARROW ============ */
+.tooltip-arrow::before {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 8px;
+  height: 8px;
+  background: oklch(0.17 0.008 155);
+  border-right: 1px solid oklch(0.696 0.17 162.48 / 15%);
+  border-bottom: 1px solid oklch(0.696 0.17 162.48 / 15%);
+}
+
+/* ============ PLATFORM ICON COLOR VARIANTS ============ */
+.platform-icon-dev { color: oklch(0.75 0.15 160); }
+.platform-icon-social { color: oklch(0.7 0.18 200); }
+.platform-icon-finance { color: oklch(0.75 0.15 85); }
+.platform-icon-shopping { color: oklch(0.7 0.18 310); }
+.platform-icon-entertainment { color: oklch(0.75 0.18 330); }
+.platform-icon-work { color: oklch(0.65 0.15 250); }
+.platform-icon-gaming { color: oklch(0.7 0.2 25); }
+.platform-icon-cloud { color: oklch(0.7 0.15 240); }
+
+/* ============ STRENGTH DOT ============ */
+.strength-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.strength-dot-strong { background: oklch(0.7 0.15 162); box-shadow: 0 0 4px oklch(0.7 0.15 162 / 40%); }
+.strength-dot-moderate { background: oklch(0.8 0.15 85); box-shadow: 0 0 4px oklch(0.8 0.15 85 / 40%); }
+.strength-dot-weak { background: oklch(0.7 0.2 25); box-shadow: 0 0 4px oklch(0.7 0.2 25 / 40%); }
+
+/* ============ ROW HOVER ACCENT ============ */
+.row-hover-accent {
+  transition: border-left-color 0.2s ease, background-color 0.2s ease;
+  border-left: 2px solid transparent;
+}
+.row-hover-accent:hover {
+  border-left-color: oklch(0.696 0.17 162.48 / 30%);
+  background-color: oklch(0.696 0.17 162.48 / 3%);
+}
+
+/* ============ NOTES EXPANDED ============ */
+.notes-expanded {
+  max-height: 120px;
+  overflow-y: auto;
+  border-left: 2px solid oklch(0.696 0.17 162.48 / 20%);
+  padding-left: 8px;
+}
+
+/* ============ FOOTER GRADIENT BORDER ============ */
+.footer-gradient-border {
+  border-top: 1px solid transparent;
+  background: linear-gradient(90deg, transparent, oklch(0.696 0.17 162.48 / 15%), oklch(0.65 0.15 175 / 10%), oklch(0.696 0.17 162.48 / 15%), transparent) top / 100% 1px no-repeat,
+              oklch(0.12 0.005 155 / 60%);
+  backdrop-filter: blur(16px) saturate(1.5);
+  -webkit-backdrop-filter: blur(16px) saturate(1.5);
+}
+
+/* ============ SESSION DOT ============ */
+@keyframes session-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.session-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: oklch(0.7 0.15 162);
+  animation: session-pulse 2s ease-in-out infinite;
+}
+
+/* ============ CARD CONTENT REVEAL ============ */
+@keyframes content-reveal {
+  from { max-height: 0; opacity: 0; }
+  to { max-height: 200px; opacity: 1; }
+}
+.content-reveal {
+  animation: content-reveal 0.3s ease-out both;
+  overflow: hidden;
+}
+
+/* ============ MICRO SHINE ON HOVER ============ */
+@keyframes micro-shine {
+  0% { left: -100%; }
+  100% { left: 200%; }
+}
+.micro-shine {
+  position: relative;
+  overflow: hidden;
+}
+.micro-shine::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, oklch(1 0 0 / 3%), transparent);
+  transition: none;
+  pointer-events: none;
+}
+.micro-shine:hover::after {
+  animation: micro-shine 0.6s ease-out;
+}

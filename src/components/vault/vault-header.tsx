@@ -38,6 +38,7 @@ import {
   Lock,
   FileText,
   ShieldAlert,
+  Tags,
 } from 'lucide-react';
 import { useVaultStore, type SortField, type SortDirection } from '@/store';
 import { CATEGORIES, type CategoryId, CategoryTag } from './category-tag';
@@ -89,7 +90,10 @@ export function VaultHeader({
     favoriteFilter,
     setFavoriteFilter,
     getCategories,
+    getTags,
     getFilteredAndSorted,
+    tagFilter,
+    setTagFilter,
   } = useVaultStore();
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
@@ -135,6 +139,7 @@ export function VaultHeader({
 
   const filteredCount = getFilteredAndSorted().length;
   const categories = getCategories();
+  const tags = getTags();
 
   // Keyboard shortcuts
   const handleKeyDown = useCallback(
@@ -402,6 +407,42 @@ export function VaultHeader({
           </button>
         ))}
       </div>
+
+      {/* Tag filter chips */}
+      {tags.length > 0 && (
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
+            <Tags className="h-3 w-3" />
+            <span className="hidden sm:inline">Filter:</span>
+          </div>
+          <button
+            onClick={() => setTagFilter('')}
+            className={cn(
+              'shrink-0 rounded-full px-2.5 sm:px-3 py-1 text-xs font-medium transition-all border chip-hover',
+              !tagFilter
+                ? 'bg-primary/15 text-primary border-primary/30'
+                : 'border-border/50 text-muted-foreground hover:text-foreground hover:border-border'
+            )}
+          >
+            All
+          </button>
+          {tags.map(({ tag, count }) => (
+            <button
+              key={tag}
+              onClick={() => setTagFilter(tagFilter === tag ? '' : tag)}
+              className={cn(
+                'shrink-0 rounded-full px-2.5 sm:px-3 py-1 text-xs font-medium transition-all border flex items-center gap-1.5 chip-hover',
+                tagFilter === tag
+                  ? 'bg-primary/15 text-primary border-primary/30'
+                  : 'border-border/50 text-muted-foreground hover:text-foreground hover:border-border'
+              )}
+            >
+              {tag}
+              <span className="text-[10px] opacity-60">{count}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* View toggle + Sort controls */}
       <div className="flex items-center justify-between gap-2">

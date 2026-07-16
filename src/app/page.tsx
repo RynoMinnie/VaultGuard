@@ -45,12 +45,14 @@ import {
   Sparkles,
   Fingerprint,
   Trash2,
+  Check,
   CheckSquare,
+  Circle,
   Square,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const APP_VERSION = 'v0.5.0';
+const APP_VERSION = 'v0.6.0';
 
 // =============== AUTH SCREEN ===============
 function AuthScreen() {
@@ -62,6 +64,7 @@ function AuthScreen() {
   const [regPassword, setRegPassword] = useState('');
   const [regConfirm, setRegConfirm] = useState('');
   const [showRegPassword, setShowRegPassword] = useState(false);
+  const [showRegConfirm, setShowRegConfirm] = useState(false);
   const { login } = useAuthStore();
   const [authenticating, setAuthenticating] = useState(false);
 
@@ -171,7 +174,7 @@ function AuthScreen() {
         <CardContent className="p-8">
           {/* Logo with animated lock */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-primary/20 to-teal/10 mb-5 emerald-glow-animate relative overflow-hidden">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-primary/20 to-teal/10 mb-5 breathe-glow relative overflow-hidden">
               <div className="absolute inset-0 shimmer opacity-30" />
               <VaultIcon className="h-9 w-9 text-primary relative z-10 lock-icon-animate" />
             </div>
@@ -192,8 +195,8 @@ function AuthScreen() {
               className={cn(
                 'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
                 isLogin
-                  ? 'bg-background text-foreground shadow-sm shadow-black/5'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'bg-background text-foreground shadow-sm shadow-black/5 tab-indicator'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
               )}
             >
               <KeyRound className="h-4 w-4" />
@@ -204,8 +207,8 @@ function AuthScreen() {
               className={cn(
                 'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
                 !isLogin
-                  ? 'bg-background text-foreground shadow-sm shadow-black/5'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'bg-background text-foreground shadow-sm shadow-black/5 tab-indicator'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
               )}
             >
               <UserPlus className="h-4 w-4" />
@@ -233,7 +236,7 @@ function AuthScreen() {
                 <Label htmlFor="login-password" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Master Password
                 </Label>
-                <div className="relative">
+                <div className="input-group relative">
                   <Input
                     id="login-password"
                     type={showPassword ? 'text' : 'password'}
@@ -241,13 +244,13 @@ function AuthScreen() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your master password"
                     autoComplete="current-password"
-                    className="pr-10 h-11"
+                    className="h-11"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                    className="toggle-btn h-10 w-10 hover:bg-transparent"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -283,7 +286,7 @@ function AuthScreen() {
                 <Label htmlFor="reg-password" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Master Password
                 </Label>
-                <div className="relative">
+                <div className="input-group relative">
                   <Input
                     id="reg-password"
                     type={showRegPassword ? 'text' : 'password'}
@@ -291,36 +294,66 @@ function AuthScreen() {
                     onChange={(e) => setRegPassword(e.target.value)}
                     placeholder="Min. 8 characters"
                     autoComplete="new-password"
-                    className="pr-10 h-11"
+                    className="h-11"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                    className="toggle-btn h-10 w-10 hover:bg-transparent"
                     onClick={() => setShowRegPassword(!showRegPassword)}
                   >
                     {showRegPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
+                {!isLogin && regPassword.length > 0 && (
+                  <div className="space-y-1.5 mt-2">
+                    {[
+                      { label: 'Minimum 8 characters', met: regPassword.length >= 8 },
+                      { label: 'Contains uppercase', met: /[A-Z]/.test(regPassword) },
+                      { label: 'Contains number', met: /[0-9]/.test(regPassword) },
+                      { label: 'Contains symbol', met: /[^A-Za-z0-9]/.test(regPassword) },
+                    ].map((req) => (
+                      <div key={req.label} className="req-check-item flex items-center gap-2 text-[11px]">
+                        {req.met ? (
+                          <Check className="h-3 w-3 text-emerald-400" />
+                        ) : (
+                          <Circle className="h-3 w-3 text-muted-foreground/30" />
+                        )}
+                        <span className={req.met ? 'text-emerald-400/80' : 'text-muted-foreground/50'}>{req.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <PasswordStrengthMeter password={regPassword} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="reg-confirm" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Confirm Master Password
                 </Label>
-                <Input
-                  id="reg-confirm"
-                  type="password"
-                  value={regConfirm}
-                  onChange={(e) => setRegConfirm(e.target.value)}
-                  placeholder="Re-enter your master password"
-                  autoComplete="new-password"
-                  className={cn(
-                    'h-11 transition-colors',
-                    regConfirm && regPassword !== regConfirm && 'border-destructive focus-visible:ring-destructive/30'
-                  )}
-                />
+                <div className="input-group relative">
+                  <Input
+                    id="reg-confirm"
+                    type={showRegConfirm ? 'text' : 'password'}
+                    value={regConfirm}
+                    onChange={(e) => setRegConfirm(e.target.value)}
+                    placeholder="Re-enter your master password"
+                    autoComplete="new-password"
+                    className={cn(
+                      'h-11 transition-colors',
+                      regConfirm && regPassword !== regConfirm && 'border-destructive focus-visible:ring-destructive/30'
+                    )}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="toggle-btn h-10 w-10 hover:bg-transparent"
+                    onClick={() => setShowRegConfirm(!showRegConfirm)}
+                  >
+                    {showRegConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
                 {regConfirm && regPassword !== regConfirm && (
                   <p className="text-xs text-destructive flex items-center gap-1">
                     <span>Passwords do not match</span>
@@ -361,6 +394,10 @@ function AuthScreen() {
           )}
         </CardContent>
       </Card>
+      <p className="mt-4 flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground/40">
+        <Lock className="h-3 w-3" />
+        Created with AES-256-GCM encryption
+      </p>
     </div>
   );
 }
@@ -717,13 +754,25 @@ function VaultScreen() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border/30 glass-strong mt-auto">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between text-[10px] text-muted-foreground/50">
-          <span>Password Vault {versionInfo} — Zero-Knowledge Encryption</span>
-          <span className="flex items-center gap-1">
-            <Shield className="h-3 w-3" />
-            AES-256-GCM · PBKDF2
-          </span>
+      <footer className="footer-gradient-border mt-auto">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-2 text-[10px] text-muted-foreground/50">
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1.5">
+              <span className="session-dot" />
+              <span>Session active</span>
+            </span>
+            <span className="hidden sm:inline text-muted-foreground/20">·</span>
+            <span>Password Vault {versionInfo} — Zero-Knowledge Encryption</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="hidden md:flex items-center gap-1 text-muted-foreground/40">
+              ⌘K Search · ⌘N New · Esc Clear
+            </span>
+            <span className="flex items-center gap-1">
+              <Shield className="h-3 w-3" />
+              AES-256-GCM · PBKDF2
+            </span>
+          </div>
         </div>
       </footer>
 

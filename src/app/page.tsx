@@ -8,7 +8,6 @@ import {
   deriveEncryptionKey,
   decryptEntry,
   encryptEntry,
-  generatePassword,
 } from '@/lib/crypto';
 import type { VaultEntryData } from '@/lib/crypto';
 import { VaultHeader } from '@/components/vault/vault-header';
@@ -16,15 +15,19 @@ import { EntryCard } from '@/components/vault/entry-card';
 import { EntryRow } from '@/components/vault/entry-row';
 import { EntryFormDialog } from '@/components/vault/entry-form-dialog';
 import { PasswordGenerator } from '@/components/vault/password-generator';
+import { PasswordStrengthMeter } from '@/components/vault/password-strength-meter';
 import { InactivityWarning } from '@/components/vault/inactivity-warning';
 import { ImportExportDialog } from '@/components/vault/import-export-dialog';
 import { ChangePasswordDialog } from '@/components/vault/change-password-dialog';
+import { CategoryTag, type CategoryId } from '@/components/vault/category-tag';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
+import { formatDistanceToNow } from 'date-fns';
 import {
   Shield,
   LogOut,
@@ -36,7 +39,11 @@ import {
   Vault as VaultIcon,
   KeyRound,
   ChevronRight,
+  Clock,
+  Sparkles,
+  Fingerprint,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const APP_VERSION = 'v0.1.0';
 
@@ -61,26 +68,14 @@ function AuthScreen() {
 
     setLoading(true);
     try {
-      // We need the salt first to hash the password client-side
-      // For login, we need to fetch the user's salt first
-      // But we don't have a "get salt" endpoint. Let's hash client-side
-      // and compare. The issue is we need the salt.
-
-      // Actually, let me adjust: We'll send the raw password to a modified endpoint,
-      // OR we can get the salt first. Let me add a simple approach:
-      // We'll use a fixed salt approach for auth, but that's not ideal.
-
-      // Better approach: fetch user's salt first via a dedicated endpoint
       const saltRes = await fetch(`/api/auth/salt?username=${encodeURIComponent(username.trim())}`);
       if (!saltRes.ok) {
         throw new Error('Invalid username or password');
       }
       const { salt, encryptionSalt } = await saltRes.json();
 
-      // Hash password with the user's salt
       const passwordHash = await hashPassword(password, salt);
 
-      // Login
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -93,8 +88,6 @@ function AuthScreen() {
       }
 
       const { user, token } = await res.json();
-
-      // Derive encryption key
       const key = await deriveEncryptionKey(password, encryptionSalt);
 
       login(token, user.id, user.username, key, encryptionSalt);
@@ -156,47 +149,53 @@ function AuthScreen() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 vault-bg">
-      {/* Background gradient orbs */}
+    <div className="min-h-screen flex items-center justify-center p-4 vault-bg vault-bg-mesh">
+      {/* Animated background orbs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-primary/5 rounded-full blur-3xl float-animate" />
+        <div className="absolute -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-teal/5 rounded-full blur-3xl float-animate" style={{ animationDelay: '-3s' }} />
       </div>
 
-      <Card className="w-full max-w-md border-border/60 bg-card/80 backdrop-blur-xl emerald-glow relative z-10">
+      <Card className="w-full max-w-md border-border/40 bg-card/70 backdrop-blur-2xl gradient-border relative z-10 animate-fade-in">
         <CardContent className="p-8">
-          {/* Logo */}
+          {/* Logo with animated lock */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-4">
-              <VaultIcon className="h-8 w-8 text-primary" />
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-primary/20 to-teal/10 mb-5 emerald-glow-animate relative overflow-hidden">
+              <div className="absolute inset-0 shimmer opacity-30" />
+              <VaultIcon className="h-9 w-9 text-primary relative z-10 lock-icon-animate" />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight">Password Vault</h1>
-            <p className="text-sm text-muted-foreground mt-1">
+            <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-foreground via-foreground to-foreground/70 bg-clip-text text-transparent">
+              Password Vault
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1.5 flex items-center justify-center gap-1.5">
+              <Fingerprint className="h-3.5 w-3.5 text-primary/60" />
               Zero-knowledge encrypted password manager
             </p>
-            <p className="text-xs text-muted-foreground/60 mt-0.5">{APP_VERSION}</p>
+            <p className="text-[10px] text-muted-foreground/40 mt-1 font-mono">{APP_VERSION}</p>
           </div>
 
           {/* Tab switcher */}
-          <div className="flex mb-6 bg-muted/50 rounded-lg p-1">
+          <div className="flex mb-6 bg-muted/40 rounded-xl p-1 border border-border/30">
             <button
               onClick={() => setIsLogin(true)}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-all ${
+              className={cn(
+                'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
                 isLogin
-                  ? 'bg-background text-foreground shadow-sm'
+                  ? 'bg-background text-foreground shadow-sm shadow-black/5'
                   : 'text-muted-foreground hover:text-foreground'
-              }`}
+              )}
             >
               <KeyRound className="h-4 w-4" />
               Sign In
             </button>
             <button
               onClick={() => setIsLogin(false)}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-all ${
+              className={cn(
+                'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
                 !isLogin
-                  ? 'bg-background text-foreground shadow-sm'
+                  ? 'bg-background text-foreground shadow-sm shadow-black/5'
                   : 'text-muted-foreground hover:text-foreground'
-              }`}
+              )}
             >
               <UserPlus className="h-4 w-4" />
               Register
@@ -204,9 +203,11 @@ function AuthScreen() {
           </div>
 
           {isLogin ? (
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-4 animate-fade-in">
               <div className="space-y-2">
-                <Label htmlFor="login-username">Username</Label>
+                <Label htmlFor="login-username" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Username
+                </Label>
                 <Input
                   id="login-username"
                   value={username}
@@ -214,10 +215,13 @@ function AuthScreen() {
                   placeholder="Enter your username"
                   autoComplete="username"
                   autoFocus
+                  className="h-11"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="login-password">Master Password</Label>
+                <Label htmlFor="login-password" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Master Password
+                </Label>
                 <div className="relative">
                   <Input
                     id="login-password"
@@ -226,7 +230,7 @@ function AuthScreen() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your master password"
                     autoComplete="current-password"
-                    className="pr-10"
+                    className="pr-10 h-11"
                   />
                   <Button
                     type="button"
@@ -239,7 +243,7 @@ function AuthScreen() {
                   </Button>
                 </div>
               </div>
-              <Button type="submit" className="w-full" disabled={loading || !username.trim() || !password}>
+              <Button type="submit" className="w-full h-11 shadow-lg shadow-primary/20" disabled={loading || !username.trim() || !password}>
                 {loading ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : (
@@ -249,9 +253,11 @@ function AuthScreen() {
               </Button>
             </form>
           ) : (
-            <form onSubmit={handleRegister} className="space-y-4">
+            <form onSubmit={handleRegister} className="space-y-4 animate-fade-in">
               <div className="space-y-2">
-                <Label htmlFor="reg-username">Username</Label>
+                <Label htmlFor="reg-username" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Username
+                </Label>
                 <Input
                   id="reg-username"
                   value={username}
@@ -259,10 +265,13 @@ function AuthScreen() {
                   placeholder="Choose a username"
                   autoComplete="username"
                   autoFocus
+                  className="h-11"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="reg-password">Master Password</Label>
+                <Label htmlFor="reg-password" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Master Password
+                </Label>
                 <div className="relative">
                   <Input
                     id="reg-password"
@@ -271,7 +280,7 @@ function AuthScreen() {
                     onChange={(e) => setRegPassword(e.target.value)}
                     placeholder="Min. 8 characters"
                     autoComplete="new-password"
-                    className="pr-10"
+                    className="pr-10 h-11"
                   />
                   <Button
                     type="button"
@@ -283,9 +292,12 @@ function AuthScreen() {
                     {showRegPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
+                <PasswordStrengthMeter password={regPassword} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="reg-confirm">Confirm Master Password</Label>
+                <Label htmlFor="reg-confirm" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Confirm Master Password
+                </Label>
                 <Input
                   id="reg-confirm"
                   type="password"
@@ -293,12 +305,21 @@ function AuthScreen() {
                   onChange={(e) => setRegConfirm(e.target.value)}
                   placeholder="Re-enter your master password"
                   autoComplete="new-password"
+                  className={cn(
+                    'h-11 transition-colors',
+                    regConfirm && regPassword !== regConfirm && 'border-destructive focus-visible:ring-destructive/30'
+                  )}
                 />
+                {regConfirm && regPassword !== regConfirm && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <span>Passwords do not match</span>
+                  </p>
+                )}
               </div>
               <PasswordGenerator value={regPassword} onChange={setRegPassword} />
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full h-11 shadow-lg shadow-primary/20"
                 disabled={loading || !username.trim() || !regPassword || !regConfirm}
               >
                 {loading ? (
@@ -312,11 +333,11 @@ function AuthScreen() {
           )}
 
           {/* Security note */}
-          <div className="mt-6 flex items-start gap-2 rounded-lg bg-muted/40 p-3">
-            <Shield className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-            <p className="text-xs text-muted-foreground leading-relaxed">
+          <div className="mt-6 flex items-start gap-2.5 rounded-xl bg-muted/30 border border-border/30 p-3.5">
+            <Shield className="h-4 w-4 text-primary/70 shrink-0 mt-0.5" />
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
               Your master password is never sent to the server. All encryption and decryption happens
-              locally in your browser using AES-256-GCM.
+              locally in your browser using <span className="text-primary/80 font-medium">AES-256-GCM</span>.
             </p>
           </div>
         </CardContent>
@@ -325,12 +346,47 @@ function AuthScreen() {
   );
 }
 
+// =============== RECENTLY USED SECTION ===============
+function RecentlyUsedSection() {
+  const { getRecentEntries } = useVaultStore();
+  const recent = getRecentEntries();
+
+  if (recent.length === 0) return null;
+
+  return (
+    <div className="mb-6">
+      <div className="flex items-center gap-2 mb-3">
+        <Clock className="h-4 w-4 text-primary/60" />
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Recently Accessed</h2>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+        {recent.map((entry) => (
+          <button
+            key={entry.id}
+            className="group flex items-center gap-2.5 rounded-lg bg-muted/30 hover:bg-muted/60 border border-border/30 hover:border-primary/20 px-3 py-2.5 text-left transition-all duration-200 hover:emerald-glow-sm"
+          >
+            <div className="h-7 w-7 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+              <Sparkles className="h-3.5 w-3.5 text-primary/70" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-medium truncate">{entry.data.platform}</p>
+              <p className="text-[10px] text-muted-foreground/60 truncate">
+                {formatDistanceToNow(new Date(entry.data.lastAccessed), { addSuffix: true })}
+              </p>
+            </div>
+          </button>
+        ))}
+      </div>
+      <Separator className="mt-4 opacity-40" />
+    </div>
+  );
+}
+
 // =============== VAULT SCREEN ===============
 function VaultScreen() {
   const { token, encryptionKey, username, logout } = useAuthStore();
-  const { entries, isLoading, setLoading, setEntries, addEntry, updateEntry, removeEntry, getFilteredAndSorted } =
+  const { entries, isLoading, setLoading, setEntries, addEntry, updateEntry, removeEntry, getFilteredAndSorted, viewMode, searchQuery } =
     useVaultStore();
-  const { resetTimer } = useTimeoutStore();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<DecryptedEntry | null>(null);
@@ -340,7 +396,6 @@ function VaultScreen() {
   const [versionInfo, setVersionInfo] = useState<string>(APP_VERSION);
   const fetchedRef = useRef(false);
 
-  // Fetch entries on mount
   const fetchEntries = useCallback(async () => {
     if (!token || !encryptionKey || fetchedRef.current) return;
     fetchedRef.current = true;
@@ -349,23 +404,15 @@ function VaultScreen() {
       const res = await fetch('/api/vault/entries', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) {
-        throw new Error('Failed to fetch');
-      }
+      if (!res.ok) throw new Error('Failed to fetch');
       const { entries: rawEntries } = await res.json();
 
       const decrypted: DecryptedEntry[] = [];
       for (const e of rawEntries) {
         try {
           const data = await decryptEntry(e.encryptedData, e.iv, encryptionKey);
-          decrypted.push({
-            id: e.id,
-            data,
-            createdAt: e.createdAt,
-            updatedAt: e.updatedAt,
-          });
+          decrypted.push({ id: e.id, data, createdAt: e.createdAt, updatedAt: e.updatedAt });
         } catch {
-          // Entry might be corrupt or from different key
           console.warn('Failed to decrypt entry:', e.id);
         }
       }
@@ -389,9 +436,7 @@ function VaultScreen() {
         const data = await res.json();
         setVersionInfo(data.currentVersion);
       }
-    } catch {
-      // fallback to APP_VERSION
-    }
+    } catch { /* fallback */ }
   };
 
   const handleLogout = async () => {
@@ -418,13 +463,8 @@ function VaultScreen() {
     setFormOpen(true);
   };
 
-  const handleSaved = (entry: DecryptedEntry) => {
-    addEntry(entry);
-  };
-
-  const handleUpdated = (entry: DecryptedEntry) => {
-    updateEntry(entry.id, entry);
-  };
+  const handleSaved = (entry: DecryptedEntry) => addEntry(entry);
+  const handleUpdated = (entry: DecryptedEntry) => updateEntry(entry.id, entry);
 
   const handleDelete = async (id: string) => {
     if (!token) return;
@@ -441,37 +481,39 @@ function VaultScreen() {
   };
 
   const filteredEntries = getFilteredAndSorted();
-  const { viewMode, searchQuery } = useVaultStore();
 
   return (
     <div
-      className="min-h-screen flex flex-col vault-bg"
-      onMouseMove={resetTimer}
-      onKeyDown={resetTimer}
-      onWheel={resetTimer}
-      onClick={resetTimer}
+      className="min-h-screen flex flex-col vault-bg vault-bg-mesh"
+      onMouseMove={useTimeoutStore.getState().resetTimer}
+      onKeyDown={useTimeoutStore.getState().resetTimer}
+      onWheel={useTimeoutStore.getState().resetTimer}
+      onClick={useTimeoutStore.getState().resetTimer}
     >
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-border/40 glass-strong">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
               <VaultIcon className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <h1 className="text-sm font-semibold leading-none">Password Vault</h1>
-              <p className="text-xs text-muted-foreground">{versionInfo}</p>
+              <h1 className="text-sm font-semibold leading-none tracking-tight">Password Vault</h1>
+              <p className="text-[10px] text-muted-foreground/50 font-mono">{versionInfo}</p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
-              <div className="h-6 w-px bg-border" />
-              <span>{username}</span>
+              <div className="h-5 w-px bg-border/50" />
+              <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
+                <span className="text-xs font-semibold text-primary">{username?.charAt(0).toUpperCase()}</span>
+              </div>
+              <span className="text-xs">{username}</span>
             </div>
-            <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground hover:text-destructive">
-              <LogOut className="h-4 w-4 mr-1.5" />
-              <span className="hidden sm:inline">Logout</span>
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground hover:text-destructive h-8">
+              <LogOut className="h-3.5 w-3.5 mr-1.5" />
+              <span className="hidden sm:inline text-xs">Logout</span>
             </Button>
           </div>
         </div>
@@ -488,77 +530,77 @@ function VaultScreen() {
 
         <div className="mt-6">
           {isLoading ? (
-            // Loading skeletons
             <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-2'}>
               {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-40 rounded-xl" />
+                <div key={i} className="space-y-3 rounded-xl border border-border/30 p-4">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-8 w-full" />
+                  <Skeleton className="h-8 w-full" />
+                  <Skeleton className="h-8 w-2/3" />
+                </div>
               ))}
             </div>
           ) : filteredEntries.length === 0 ? (
-            // Empty state
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="w-20 h-20 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
-                <VaultIcon className="h-10 w-10 text-muted-foreground/40" />
+            <div className="flex flex-col items-center justify-center py-24 text-center animate-fade-in">
+              <div className="relative mb-6">
+                <div className="w-24 h-24 rounded-3xl bg-muted/30 flex items-center justify-center float-animate">
+                  <VaultIcon className="h-12 w-12 text-muted-foreground/20" />
+                </div>
+                <div className="absolute -inset-4 rounded-[2rem] bg-primary/5 blur-xl -z-10" />
               </div>
               <h3 className="text-lg font-medium text-muted-foreground">
                 {searchQuery ? 'No results found' : 'Your vault is empty'}
               </h3>
-              <p className="text-sm text-muted-foreground/60 mt-1 max-w-sm">
+              <p className="text-sm text-muted-foreground/50 mt-2 max-w-sm">
                 {searchQuery
-                  ? `No entries match "${searchQuery}"`
-                  : 'Add your first password entry to get started with your secure vault.'}
+                  ? <>No entries match &ldquo;<span className="text-primary/70">{searchQuery}</span>&rdquo;. Try a different search term.</>
+                  : 'Add your first password entry to start building your secure vault.'}
               </p>
               {!searchQuery && (
-                <Button onClick={handleAddEntry} className="mt-4">
+                <Button onClick={handleAddEntry} className="mt-6 shadow-lg shadow-primary/20">
+                  <Sparkles className="h-4 w-4 mr-2" />
                   Add Your First Entry
                   <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
               )}
             </div>
-          ) : viewMode === 'grid' ? (
-            // Grid view
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredEntries.map((entry) => (
-                <EntryCard
-                  key={entry.id}
-                  entry={entry}
-                  onEdit={handleEditEntry}
-                  onDelete={handleDelete}
-                />
-              ))}
-            </div>
           ) : (
-            // List view
-            <div className="space-y-2">
-              {/* List header */}
-              <div className="flex items-center gap-3 px-4 py-2 text-xs font-medium text-muted-foreground border-b border-border/40 mb-1">
-                <div className="flex-1">Platform</div>
-                <div className="hidden md:block w-36">Username</div>
-                <div className="hidden lg:block w-44">Email</div>
-                <div className="w-48">Password</div>
-                <div className="hidden sm:block w-24 text-right">Modified</div>
-                <div className="w-16" />
-              </div>
-              {filteredEntries.map((entry) => (
-                <EntryRow
-                  key={entry.id}
-                  entry={entry}
-                  onEdit={handleEditEntry}
-                  onDelete={handleDelete}
-                />
-              ))}
-            </div>
+            <>
+              <RecentlyUsedSection />
+
+              {viewMode === 'grid' ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger-children">
+                  {filteredEntries.map((entry) => (
+                    <EntryCard key={entry.id} entry={entry} onEdit={handleEditEntry} onDelete={handleDelete} />
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-3 px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50 border-b border-border/30 mb-1">
+                    <div className="flex-1">Platform</div>
+                    <div className="hidden md:block w-36">Username</div>
+                    <div className="hidden lg:block w-44">Email</div>
+                    <div className="w-48">Password</div>
+                    <div className="hidden sm:block w-24 text-right">Modified</div>
+                    <div className="w-16" />
+                  </div>
+                  {filteredEntries.map((entry) => (
+                    <EntryRow key={entry.id} entry={entry} onEdit={handleEditEntry} onDelete={handleDelete} />
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border/40 bg-background/80 backdrop-blur-xl mt-auto">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between text-xs text-muted-foreground">
+      <footer className="border-t border-border/30 glass-strong mt-auto">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between text-[10px] text-muted-foreground/50">
           <span>Password Vault {versionInfo} — Zero-Knowledge Encryption</span>
           <span className="flex items-center gap-1">
             <Shield className="h-3 w-3" />
-            AES-256-GCM
+            AES-256-GCM · PBKDF2
           </span>
         </div>
       </footer>
@@ -590,8 +632,8 @@ export default function HomePage() {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
-    const WARNING_MS = 4 * 60 * 1000; // 4 minutes
+    const TIMEOUT_MS = 5 * 60 * 1000;
+    const WARNING_MS = 4 * 60 * 1000;
     const COUNTDOWN_INTERVAL = 1000;
 
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
@@ -605,10 +647,8 @@ export default function HomePage() {
       useTimeoutStore.getState().resetTimer();
     };
 
-    // Track activity
     const onActivity = () => {
       if (useTimeoutStore.getState().isWarning) {
-        // While warning is showing, activity dismisses it
         reset();
         return;
       }
@@ -621,12 +661,10 @@ export default function HomePage() {
     window.addEventListener('click', onActivity);
     window.addEventListener('touchstart', onActivity);
 
-    // Check inactivity every second
     const checkInterval = setInterval(() => {
       const elapsed = Date.now() - lastActivity;
 
       if (elapsed >= TIMEOUT_MS) {
-        // Auto-logout
         clearInterval(checkInterval);
         if (countdownId) clearInterval(countdownId);
         if (timeoutId) clearTimeout(timeoutId);
@@ -637,7 +675,6 @@ export default function HomePage() {
       if (elapsed >= WARNING_MS && !warningTriggered) {
         warningTriggered = true;
         useTimeoutStore.getState().startWarning();
-        // Start countdown
         const remaining = Math.ceil((TIMEOUT_MS - elapsed) / 1000);
         useTimeoutStore.setState({ countdown: remaining });
 
@@ -683,9 +720,6 @@ export default function HomePage() {
     };
   }, [isAuthenticated]);
 
-  // No need for separate checking state - mounted covers it
-
-  // Set timeout logout callback
   useEffect(() => {
     setTimeoutLogoutCallback(async () => {
       const { token: t } = useAuthStore.getState();

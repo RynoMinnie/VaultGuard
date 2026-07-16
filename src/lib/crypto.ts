@@ -11,6 +11,8 @@ export interface VaultEntryData {
   email: string;
   password: string;
   other: string;
+  category: string;
+  lastAccessed: string;
 }
 
 const PBKDF2_ITERATIONS = 600000;

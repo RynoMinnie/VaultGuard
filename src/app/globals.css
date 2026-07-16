@@ -45,6 +45,12 @@
   --color-emerald-foreground: var(--emerald-foreground);
   --color-teal: var(--teal);
   --color-teal-foreground: var(--teal-foreground);
+  --animate-fade-in: fade-in 0.5s ease-out;
+  --animate-slide-up: slide-up 0.4s ease-out;
+  --animate-scale-in: scale-in 0.2s ease-out;
+  --animate-shimmer: shimmer 2s infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-pulse-glow: pulse-glow 2s ease-in-out infinite;
 }
 
 :root {
@@ -125,7 +131,50 @@
   }
 }
 
-/* Custom scrollbar for dark theme */
+/* ============ ANIMATIONS ============ */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 15px oklch(0.696 0.17 162.48 / 10%), 0 0 45px oklch(0.696 0.17 162.48 / 5%); }
+  50% { box-shadow: 0 0 25px oklch(0.696 0.17 162.48 / 20%), 0 0 80px oklch(0.696 0.17 162.48 / 8%); }
+}
+
+@keyframes gradient-border {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes lock-bounce {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-3px) rotate(-2deg); }
+  75% { transform: translateY(-1px) rotate(1deg); }
+}
+
+/* ============ SCROLLBAR ============ */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
@@ -140,7 +189,7 @@
   background: oklch(0.45 0.05 155);
 }
 
-/* Glow effect for emerald accent */
+/* ============ GLOW EFFECTS ============ */
 .emerald-glow {
   box-shadow: 0 0 20px oklch(0.696 0.17 162.48 / 15%),
     0 0 60px oklch(0.696 0.17 162.48 / 5%);
@@ -150,7 +199,36 @@
   box-shadow: 0 0 10px oklch(0.696 0.17 162.48 / 10%);
 }
 
-/* Vault background pattern */
+.emerald-glow-animate {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+/* ============ GRADIENT BORDER ============ */
+.gradient-border {
+  position: relative;
+}
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    oklch(0.696 0.17 162.48 / 40%),
+    oklch(0.65 0.15 175 / 20%),
+    oklch(0.696 0.17 162.48 / 40%)
+  );
+  background-size: 200% 200%;
+  animation: gradient-border 4s ease infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ============ BACKGROUND PATTERNS ============ */
 .vault-bg {
   background-image: radial-gradient(
     oklch(0.696 0.17 162.48 / 3%) 1px,
@@ -158,3 +236,76 @@
   );
   background-size: 30px 30px;
 }
+
+.vault-bg-mesh {
+  background-image:
+    radial-gradient(at 20% 20%, oklch(0.696 0.17 162.48 / 6%) 0px, transparent 50%),
+    radial-gradient(at 80% 80%, oklch(0.65 0.15 175 / 4%) 0px, transparent 50%),
+    radial-gradient(at 50% 50%, oklch(0.696 0.17 162.48 / 2%) 0px, transparent 70%);
+}
+
+/* ============ SHIMMER LOADING ============ */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    oklch(0.696 0.17 162.48 / 8%) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* ============ LOCK ICON ANIMATION ============ */
+.lock-icon-animate {
+  animation: lock-bounce 3s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+/* ============ FLOAT ANIMATION ============ */
+.float-animate {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* ============ GLASS MORPHISM ============ */
+.glass {
+  background: oklch(0.17 0.008 155 / 60%);
+  backdrop-filter: blur(16px) saturate(1.5);
+  -webkit-backdrop-filter: blur(16px) saturate(1.5);
+}
+
+.glass-strong {
+  background: oklch(0.17 0.008 155 / 80%);
+  backdrop-filter: blur(24px) saturate(1.8);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8);
+}
+
+/* ============ INPUT FOCUS GLOW ============ */
+input:focus,
+textarea:focus {
+  box-shadow: 0 0 0 3px oklch(0.696 0.17 162.48 / 15%);
+}
+
+/* ============ CARD HOVER LIFT ============ */
+.card-hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card-hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+/* ============ STAGGER ANIMATION FOR CHILDREN ============ */
+.stagger-children > * {
+  animation: slide-up 0.4s ease-out both;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0.03s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.06s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.09s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.12s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.15s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.18s; }
+.stagger-children > *:nth-child(7) { animation-delay: 0.21s; }
+.stagger-children > *:nth-child(8) { animation-delay: 0.24s; }
+.stagger-children > *:nth-child(9) { animation-delay: 0.27s; }
+.stagger-children > *:nth-child(10) { animation-delay: 0.30s; }
+.stagger-children > *:nth-child(n+11) { animation-delay: 0.33s; }

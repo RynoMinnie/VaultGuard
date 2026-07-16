@@ -25,6 +25,8 @@ import {
 import type { DecryptedEntry } from '@/store';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { CategoryTag } from './category-tag';
+import { useVaultStore } from '@/store';
 
 interface EntryRowProps {
   entry: DecryptedEntry;
@@ -66,17 +68,23 @@ function CopyBtn({ text, label }: { text: string; label: string }) {
 export function EntryRow({ entry, onEdit, onDelete }: EntryRowProps) {
   const [showPassword, setShowPassword] = useState(false);
   const { data } = entry;
+  const { touchEntry } = useVaultStore();
 
   const updatedDate = entry.updatedAt
     ? format(new Date(entry.updatedAt), 'MMM d, yyyy')
     : '';
 
   return (
-    <div className="group flex items-center gap-3 rounded-lg border border-border/60 bg-card/60 hover:bg-card/90 hover:border-primary/20 px-4 py-3 transition-all duration-200">
-      {/* Platform */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
+    <div
+      className="group flex items-center gap-3 rounded-lg border border-border/40 bg-card/50 hover:bg-card/80 hover:border-primary/20 px-4 py-3 transition-all duration-200 cursor-pointer"
+      onClick={() => touchEntry(entry.id)}
+    >
+      {/* Platform + Category */}
+      <div className="flex-1 min-w-0 flex items-center gap-2">
+        <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="font-medium text-sm truncate">{data.platform}</span>
+          {data.category && <CategoryTag categoryId={data.category as import('./category-tag').CategoryId} size="sm" />}
           {data.platformUrl && (
             <a
               href={
@@ -87,11 +95,13 @@ export function EntryRow({ entry, onEdit, onDelete }: EntryRowProps) {
               target="_blank"
               rel="noopener noreferrer"
               className="text-muted-foreground hover:text-primary transition-colors shrink-0"
+              onClick={(e) => e.stopPropagation()}
             >
               <ExternalLink className="h-3 w-3" />
             </a>
           )}
         </div>
+      </div>
       </div>
 
       {/* Username */}
@@ -141,7 +151,7 @@ export function EntryRow({ entry, onEdit, onDelete }: EntryRowProps) {
           variant="ghost"
           size="icon"
           className="h-7 w-7"
-          onClick={() => onEdit(entry)}
+          onClick={(e) => { e.stopPropagation(); onEdit(entry); }}
           title="Edit"
         >
           <Edit3 className="h-3.5 w-3.5" />

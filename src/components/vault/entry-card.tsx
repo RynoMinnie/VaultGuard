@@ -127,7 +127,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
 export function EntryCard({ entry, onEdit, onDuplicate, onDelete, onView }: EntryCardProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [pwCopied, setPwCopied] = useState(false);
-  const { touchEntry, toggleFavorite, selectedIds } = useVaultStore();
+  const { touchEntry, toggleFavorite, toggleSelect, selectedIds } = useVaultStore();
   const { data } = entry;
   const isFav = data.isFavorite;
   const isSelected = selectedIds.has(entry.id);
@@ -158,13 +158,17 @@ export function EntryCard({ entry, onEdit, onDuplicate, onDelete, onView }: Entr
         >
           <CardContent className="p-4 space-y-3" onClick={handleCardClick}>
             {/* Selection checkbox */}
-            {isSelected && (
-              <div className="absolute top-2 right-2 z-10">
-                <div className="h-5 w-5 rounded-md bg-primary border-2 border-primary flex items-center justify-center">
-                  <Check className="h-3 w-3 text-primary-foreground" />
-                </div>
-              </div>
-            )}
+            <button
+              className="absolute top-2.5 left-2.5 z-10 h-5 w-5 rounded-md border-2 flex items-center justify-center transition-all duration-150"
+              onClick={(e) => { e.stopPropagation(); toggleSelect(entry.id); }}
+              title={isSelected ? 'Deselect' : 'Select'}
+              style={{
+                backgroundColor: isSelected ? 'var(--primary)' : 'transparent',
+                borderColor: isSelected ? 'var(--primary)' : 'var(--border)',
+              }}
+            >
+              {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
+            </button>
 
             {/* Header */}
             <div className="flex items-start justify-between gap-2">

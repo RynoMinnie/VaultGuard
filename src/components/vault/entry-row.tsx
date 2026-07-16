@@ -70,7 +70,7 @@ function CopyBtn({ text, label }: { text: string; label: string }) {
 export function EntryRow({ entry, onEdit, onDelete }: EntryRowProps) {
   const [showPassword, setShowPassword] = useState(false);
   const { data } = entry;
-  const { touchEntry, selectedIds } = useVaultStore();
+  const { touchEntry, toggleSelect, selectedIds } = useVaultStore();
   const isSelected = selectedIds.has(entry.id);
 
   const updatedDate = entry.updatedAt
@@ -86,13 +86,17 @@ export function EntryRow({ entry, onEdit, onDelete }: EntryRowProps) {
       onClick={() => touchEntry(entry.id)}
     >
       {/* Selection checkbox */}
-      {isSelected && (
-        <div className="mr-1 shrink-0">
-          <div className="h-4 w-4 rounded bg-primary border border-primary/60 flex items-center justify-center">
-            <Check className="h-2.5 w-2.5 text-primary-foreground" />
-          </div>
-        </div>
-      )}
+      <button
+        className="mr-1 shrink-0 h-4 w-4 rounded border flex items-center justify-center transition-all duration-150"
+        onClick={(e) => { e.stopPropagation(); toggleSelect(entry.id); }}
+        title={isSelected ? 'Deselect' : 'Select'}
+        style={{
+          backgroundColor: isSelected ? 'var(--primary)' : 'transparent',
+          borderColor: isSelected ? 'var(--primary)' : 'var(--border)',
+        }}
+      >
+        {isSelected && <Check className="h-2.5 w-2.5 text-primary-foreground" />}
+      </button>
       {/* Platform + Category */}
       <div className="flex-1 min-w-0 flex items-center gap-2">
         <div className="min-w-0 flex-1">

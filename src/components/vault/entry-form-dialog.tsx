@@ -21,7 +21,7 @@ import { encryptEntry } from '@/lib/crypto';
 import type { VaultEntryData } from '@/lib/crypto';
 import type { DecryptedEntry } from '@/store';
 import { toast } from 'sonner';
-import { Loader2, Save, Tag } from 'lucide-react';
+import { Loader2, Save, Tag, CalendarClock } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 interface EntryFormDialogProps {
@@ -42,6 +42,7 @@ const emptyData: VaultEntryData = {
   category: '',
   lastAccessed: '',
   isFavorite: false,
+  expiryDate: '',
 };
 
 export function EntryFormDialog({
@@ -248,6 +249,31 @@ export function EntryFormDialog({
               onChange={(pw) => updateField('password', pw)}
             />
             <PasswordStrengthMeter password={data.password} />
+          </div>
+
+          {/* Expiry Date */}
+          <div className="space-y-2">
+            <Label htmlFor="expiryDate" className="text-xs font-medium uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+              <CalendarClock className="h-3 w-3" />
+              Expiry Date (Optional)
+            </Label>
+            <Input
+              id="expiryDate"
+              type="date"
+              value={data.expiryDate}
+              onChange={(e) => updateField('expiryDate', e.target.value)}
+              className="h-10"
+              min={new Date().toISOString().split('T')[0]}
+            />
+            {data.expiryDate && (
+              <p className="text-[11px] text-muted-foreground">
+                {new Date(data.expiryDate) < new Date()
+                  ? 'This entry has already expired'
+                  : new Date(data.expiryDate) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+                    ? 'Expiring within 7 days'
+                    : 'Password expiry reminder will show when within 7 days'}
+              </p>
+            )}
           </div>
 
           {/* Notes */}

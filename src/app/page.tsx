@@ -20,6 +20,8 @@ import { InactivityWarning } from '@/components/vault/inactivity-warning';
 import { ImportExportDialog } from '@/components/vault/import-export-dialog';
 import { ChangePasswordDialog } from '@/components/vault/change-password-dialog';
 import { CategoryTag, type CategoryId } from '@/components/vault/category-tag';
+import { EntryDetailSheet } from '@/components/vault/entry-detail-sheet';
+import { StatsOverview } from '@/components/vault/stats-overview';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -45,7 +47,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const APP_VERSION = 'v0.1.0';
+const APP_VERSION = 'v0.2.1';
 
 // =============== AUTH SCREEN ===============
 function AuthScreen() {
@@ -58,6 +60,7 @@ function AuthScreen() {
   const [regConfirm, setRegConfirm] = useState('');
   const [showRegPassword, setShowRegPassword] = useState(false);
   const { login } = useAuthStore();
+  const [authenticating, setAuthenticating] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,11 +93,13 @@ function AuthScreen() {
       const { user, token } = await res.json();
       const key = await deriveEncryptionKey(password, encryptionSalt);
 
+      setAuthenticating(true);
+      await new Promise((r) => setTimeout(r, 300));
       login(token, user.id, user.username, key, encryptionSalt);
       toast.success('Welcome back!');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Login failed');
-    } finally {
+      setAuthenticating(false);
       setLoading(false);
     }
   };
@@ -139,11 +144,13 @@ function AuthScreen() {
       const { user, token } = await res.json();
       const key = await deriveEncryptionKey(regPassword, encryptionSalt);
 
+      setAuthenticating(true);
+      await new Promise((r) => setTimeout(r, 300));
       login(token, user.id, user.username, key, encryptionSalt);
       toast.success('Account created! Your vault is ready.');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Registration failed');
-    } finally {
+      setAuthenticating(false);
       setLoading(false);
     }
   };
@@ -156,7 +163,7 @@ function AuthScreen() {
         <div className="absolute -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-teal/5 rounded-full blur-3xl float-animate" style={{ animationDelay: '-3s' }} />
       </div>
 
-      <Card className="w-full max-w-md border-border/40 bg-card/70 backdrop-blur-2xl gradient-border relative z-10 animate-fade-in">
+      <Card className="w-full max-w-md border-border/40 bg-card/70 backdrop-blur-2xl gradient-border noise-bg relative z-10 animate-fade-in">
         <CardContent className="p-8">
           {/* Logo with animated lock */}
           <div className="text-center mb-8">
@@ -340,6 +347,14 @@ function AuthScreen() {
               locally in your browser using <span className="text-primary/80 font-medium">AES-256-GCM</span>.
             </p>
           </div>
+
+          {/* Authenticating overlay */}
+          {authenticating && (
+            <div className="absolute inset-0 rounded-[inherit] bg-card/90 backdrop-blur-sm flex flex-col items-center justify-center z-20 animate-fade-in">
+              <VaultIcon className="h-10 w-10 text-primary auth-loading-icon" />
+              <p className="text-sm text-muted-foreground mt-3">Unlocking vault...</p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
@@ -393,6 +408,8 @@ function VaultScreen() {
   const [exportOpen, setExportOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [changePwOpen, setChangePwOpen] = useState(false);
+  const [detailEntry, setDetailEntry] = useState<DecryptedEntry | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [versionInfo, setVersionInfo] = useState<string>(APP_VERSION);
   const fetchedRef = useRef(false);
 
@@ -463,6 +480,29 @@ function VaultScreen() {
     setFormOpen(true);
   };
 
+  const handleDuplicateEntry = (entry: DecryptedEntry) => {
+    const dupData: VaultEntryData = {
+      ...entry.data,
+      platform: entry.data.platform + ' (Copy)',
+      lastAccessed: '',
+      isFavorite: false,
+      expiryDate: entry.data.expiryDate,
+    };
+    const dup: DecryptedEntry = {
+      id: '',
+      data: dupData,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setEditingEntry(dup);
+    setFormOpen(true);
+  };
+
+  const handleViewEntry = (entry: DecryptedEntry) => {
+    setDetailEntry(entry);
+    setDetailOpen(true);
+  };
+
   const handleSaved = (entry: DecryptedEntry) => addEntry(entry);
   const handleUpdated = (entry: DecryptedEntry) => updateEntry(entry.id, entry);
 
@@ -484,7 +524,7 @@ function VaultScreen() {
 
   return (
     <div
-      className="min-h-screen flex flex-col vault-bg vault-bg-mesh"
+      className="min-h-screen flex flex-col vault-bg vault-bg-mesh screen-transition"
       onMouseMove={useTimeoutStore.getState().resetTimer}
       onKeyDown={useTimeoutStore.getState().resetTimer}
       onWheel={useTimeoutStore.getState().resetTimer}
@@ -521,6 +561,7 @@ function VaultScreen() {
 
       {/* Main content */}
       <main className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-6">
+        <StatsOverview />
         <VaultHeader
           onAddEntry={handleAddEntry}
           onExport={() => setExportOpen(true)}
@@ -569,9 +610,9 @@ function VaultScreen() {
               <RecentlyUsedSection />
 
               {viewMode === 'grid' ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger-children">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 stagger-children">
                   {filteredEntries.map((entry) => (
-                    <EntryCard key={entry.id} entry={entry} onEdit={handleEditEntry} onDelete={handleDelete} />
+                    <EntryCard key={entry.id} entry={entry} onEdit={handleEditEntry} onDuplicate={handleDuplicateEntry} onDelete={handleDelete} onView={handleViewEntry} />
                   ))}
                 </div>
               ) : (
@@ -619,6 +660,14 @@ function VaultScreen() {
       <ImportExportDialog mode="export" open={exportOpen} onOpenChange={setExportOpen} />
       <ImportExportDialog mode="import" open={importOpen} onOpenChange={setImportOpen} />
       <ChangePasswordDialog open={changePwOpen} onOpenChange={setChangePwOpen} />
+      <EntryDetailSheet
+        entry={detailEntry}
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+        onEdit={handleEditEntry}
+        onDuplicate={handleDuplicateEntry}
+        onDelete={handleDelete}
+      />
       <InactivityWarning />
     </div>
   );
@@ -736,5 +785,9 @@ export default function HomePage() {
     });
   }, []);
 
-  return isAuthenticated ? <VaultScreen /> : <AuthScreen />;
+  return (
+    <div key={isAuthenticated ? 'vault' : 'auth'} className="screen-transition">
+      {isAuthenticated ? <VaultScreen /> : <AuthScreen />}
+    </div>
+  );
 }

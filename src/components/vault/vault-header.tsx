@@ -114,7 +114,7 @@ export function VaultHeader({
   return (
     <div className="space-y-3">
       {/* Stats bar */}
-      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+      <div className="flex items-center gap-2 sm:gap-3 text-xs text-muted-foreground flex-wrap">
         <Badge variant="secondary" className="font-mono text-[10px] h-5 px-2">
           {entries.length} {entries.length === 1 ? 'entry' : 'entries'}
         </Badge>
@@ -145,9 +145,9 @@ export function VaultHeader({
         </button>
       </div>
 
-      {/* Search + actions row */}
+      {/* Search + actions row — full width on mobile, flex on sm+ */}
       <div className="flex flex-col sm:flex-row gap-2">
-        <div className="relative flex-1 group">
+        <div className="relative flex-1 group w-full sm:w-auto">
           <Search className={cn(
             "absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors",
             searchFocused ? "text-primary" : "text-muted-foreground"
@@ -158,13 +158,13 @@ export function VaultHeader({
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => setSearchFocused(true)}
             onBlur={() => setSearchFocused(false)}
-            placeholder="Search entries... (Ctrl+K)"
-            className="pl-9 pr-20 h-10 bg-muted/30 transition-all focus:bg-background"
+            placeholder="Search entries..."
+            className="pl-9 pr-10 h-10 bg-muted/30 transition-all focus:bg-background w-full sm:pr-20"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-12 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              className="absolute right-3 sm:right-12 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -173,9 +173,10 @@ export function VaultHeader({
             ⌘K
           </kbd>
         </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={onAddEntry} className="shrink-0 shadow-lg shadow-primary/15 h-10">
+        <div className="flex items-center gap-2 shrink-0">
+          <Button onClick={onAddEntry} className="flex-1 sm:flex-none shadow-lg shadow-primary/15 h-10">
             <Plus className="h-4 w-4 mr-1.5" />
+            <span className="sm:hidden">Add</span>
             <span className="hidden sm:inline">Add Entry</span>
           </Button>
 
@@ -224,7 +225,7 @@ export function VaultHeader({
         <button
           onClick={() => setCategoryFilter('')}
           className={cn(
-            'shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-all border',
+            'shrink-0 rounded-full px-2.5 sm:px-3 py-1 text-xs font-medium transition-all border',
             !categoryFilter
               ? 'bg-primary/15 text-primary border-primary/30'
               : 'border-border/50 text-muted-foreground hover:text-foreground hover:border-border'
@@ -237,7 +238,7 @@ export function VaultHeader({
             key={id}
             onClick={() => setCategoryFilter(categoryFilter === id ? '' : id)}
             className={cn(
-              'shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-all border flex items-center gap-1.5',
+              'shrink-0 rounded-full px-2.5 sm:px-3 py-1 text-xs font-medium transition-all border flex items-center gap-1.5',
               categoryFilter === id
                 ? 'bg-primary/15 text-primary border-primary/30'
                 : 'border-border/50 text-muted-foreground hover:text-foreground hover:border-border'
@@ -250,7 +251,7 @@ export function VaultHeader({
       </div>
 
       {/* View toggle + Sort controls */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Button
             variant={viewMode === 'grid' ? 'default' : 'outline'}
@@ -277,7 +278,7 @@ export function VaultHeader({
             value={sortField}
             onValueChange={(v) => setSort(v as SortField, sortDirection)}
           >
-            <SelectTrigger className="w-[140px] h-8 text-xs">
+            <SelectTrigger className="w-[120px] sm:w-[140px] h-8 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

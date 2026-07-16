@@ -27,6 +27,8 @@ import {
   Mail,
   Lock,
   Clock,
+  Star,
+  ChevronRight,
 } from 'lucide-react';
 import { CategoryTag } from './category-tag';
 import type { DecryptedEntry } from '@/store';
@@ -38,6 +40,7 @@ interface EntryCardProps {
   entry: DecryptedEntry;
   onEdit: (entry: DecryptedEntry) => void;
   onDelete: (id: string) => void;
+  onView: (entry: DecryptedEntry) => void;
 }
 
 function CopyButton({ text, label }: { text: string; label: string }) {
@@ -69,52 +72,60 @@ function CopyButton({ text, label }: { text: string; label: string }) {
       )}
     </Button>
   );
+  }
 }
 
-export function EntryCard({ entry, onEdit, onDelete }: EntryCardProps) {
+export function EntryCard({ entry, onEdit, onDelete, onView }: EntryCardProps) {
   const [showPassword, setShowPassword] = useState(false);
-  const { touchEntry } = useVaultStore();
+  const { touchEntry, toggleFavorite } = useVaultStore();
   const { data } = entry;
-
-  const handleCardClick = () => {
-    touchEntry(entry.id);
-  };
+  const isFav = data.isFavorite;
 
   return (
     <Card
-      className="group border-border/50 bg-card/70 backdrop-blur-sm hover:border-primary/30 hover:emerald-glow-sm card-hover-lift transition-all duration-300 animate-scale-in cursor-pointer"
-      onClick={handleCardClick}
+      className="group border-border/50 bg-card/70 backdrop-blur-sm hover:border-primary/30 hover:emerald-glow-sm card-hover-lift transition-all duration-300 animate-scale-in"
     >
-      <CardContent className="p-4 space-y-3">
+      <CardContent className="p-4 space-y-3" onClick={handleCardClick}>
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0 flex-1">
+          <button
+            className="min-w-0 flex-1 text-left"
+            onClick={() => onView(entry)}
+            title="View details"
+          >
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
                 <Globe className="h-4 w-4 text-primary" />
               </div>
               <div className="min-w-0">
                 <h3 className="font-semibold text-sm truncate">{data.platform}</h3>
                 {data.platformUrl && (
                   <a
-                    href={
-                      data.platformUrl.startsWith('http')
-                        ? data.platformUrl
-                        : `https://${data.platformUrl}`
-                    }
+                    href={data.platformUrl.startsWith('http') ? data.platformUrl : `https://${data.platformUrl}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-[11px] text-muted-foreground hover:text-primary transition-colors truncate block mt-0.5"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    {data.platformUrl.replace(/^https?:\/\//, '')}
+                    {data.platformUrl.replace(/^https?:\//, '')}
                     <ExternalLink className="inline h-2.5 w-2.5 ml-0.5 opacity-60" />
                   </a>
                 )}
               </div>
             </div>
-          </div>
-          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+            <ChevronRight className="h-4 w-4 text-muted-foreground/30 group-hover:text-muted-foreground/60 transition-all shrink-0 translate-x-0 group-hover:translate-x-0.5" />
+          </button>
+
+          <div className="flex items-center gap-0.5">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 hover:bg-primary/10"
+              onClick={(e) => { e.stopPropagation(); toggleFavorite(entry.id); toast.success(isFav ? 'Unstarred' : 'Starred'); }}
+              title={isFav ? 'Remove from favorites' : 'Add to favorites'}
+            >
+              <Star className={`h-3.5 w-3.5 transition-colors ${isFav ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/40 hover:text-amber-400'}`}
+            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -189,7 +200,7 @@ export function EntryCard({ entry, onEdit, onDelete }: EntryCardProps) {
             <div className="flex items-center gap-2 rounded-md bg-muted/30 px-2.5 py-2 transition-colors hover:bg-muted/50">
               <Lock className="h-3.5 w-3.5 text-primary/60 shrink-0" />
               <span className="truncate flex-1 font-mono text-foreground/80">
-                {showPassword ? data.password : '••••••••••••••••'}
+                {showPassword ? data.password : '••••••••••••••'}
               </span>
               <Button
                 variant="ghost"

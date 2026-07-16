@@ -41,6 +41,7 @@ const emptyData: VaultEntryData = {
   other: '',
   category: '',
   lastAccessed: '',
+  isFavorite: false,
 };
 
 export function EntryFormDialog({
@@ -80,7 +81,7 @@ export function EntryFormDialog({
 
     setSaving(true);
     try {
-      const saveData = { ...data, lastAccessed: entry?.data.lastAccessed || '' };
+      const saveData = { ...data, lastAccessed: entry?.data.lastAccessed || '', isFavorite: entry?.data.isFavorite ?? false };
       const { encryptedData, iv } = await encryptEntry(saveData, encryptionKey);
 
       if (isEditing) {

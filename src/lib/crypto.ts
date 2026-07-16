@@ -13,6 +13,7 @@ export interface VaultEntryData {
   other: string;
   category: string;
   lastAccessed: string;
+  isFavorite: boolean;
 }
 
 const PBKDF2_ITERATIONS = 600000;

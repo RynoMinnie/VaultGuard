@@ -35,6 +35,7 @@ interface VaultState {
   addEntry: (entry: DecryptedEntry) => void;
   updateEntry: (id: string, entry: DecryptedEntry) => void;
   touchEntry: (id: string) => void;
+  toggleFavorite: (id: string) => void;
   removeEntry: (id: string) => void;
   setLoading: (loading: boolean) => void;
   setSearchQuery: (query: string) => void;
@@ -102,6 +103,14 @@ export const useVaultStore = create<VaultState>((set, get) => ({
       entries: state.entries.map((e) =>
         e.id === id
           ? { ...e, data: { ...e.data, lastAccessed: new Date().toISOString() } }
+          : e
+      ),
+    })),
+  toggleFavorite: (id) =>
+    set((state) => ({
+      entries: state.entries.map((e) =>
+        e.id === id
+          ? { ...e, data: { ...e.data, isFavorite: !e.data.isFavorite } }
           : e
       ),
     })),

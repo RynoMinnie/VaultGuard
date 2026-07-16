@@ -1,0 +1,472 @@
+   100→   149→   149→   149→- CRITICAL FIX: entry-card.tsx parse error (double closing brace) was causing 500 errors on every page load
+   101→   150→   150→   150→- CRITICAL FIX: Missing handleCardClick reference and missing > in className template
+   102→   151→   151→   151→- CRITICAL FIX: react-hooks/set-state-in-effect lint error in BreachCheck
+   103→   152→   152→   152→- INTEGRATION: EntryDetailSheet and StatsOverview components — built in round 2 but never wired into page.tsx
+   104→   153→   153→   153→- INTEGRATION: onView prop added to EntryCard grid rendering
+   105→   154→   154→   154→- E2E VERIFIED: Complete user flow tested via agent-browser (register → login → vault → create entry → view details → expiry field → duplicate)
+   106→   155→   155→   155→- All 0 lint errors, 0 TypeScript errors, dev server healthy
+   107→   156→   156→   156→
+   108→   157→   157→   157→---
+   109→   158→   158→   158→Task ID: 4
+   110→   159→   159→   159→Agent: Main Agent
+   111→   160→   160→   160→Task: Styling + features round 3 — favorites filter, password health, copy all, CSS enhancements
+   112→   161→   161→   161→
+   113→   162→   162→   162→Work Log:
+   114→   163→   163→   163→- Added `favoriteFilter: boolean` and `setFavoriteFilter` to VaultState in store/index.ts
+   115→   164→   164→   164→- Updated `getFilteredAndSorted()` to filter by `favoriteFilter` before category/search filters
+   116→   165→   165→   165→- Added Favorites toggle chip button to vault-header.tsx filter bar (Star icon, amber color when active)
+   117→   166→   166→   166→- Updated "All" filter chip to clear both category and favorite filters simultaneously
+   118→   167→   167→   167→- Added "Favorites" dismiss badge in stats bar when active
+   119→   168→   168→   168→- Added `Star` import to vault-header.tsx
+   120→   169→   169→   169→- Created Password Health calculation in StatsOverview: scores each password on length (8+, 12+), mixed case, numbers, symbols, common patterns, repeated chars; averages across entries
+   121→   170→   170→   170→- Added 8th stat card "Password Health" with HeartPulse icon, dynamic color (emerald ≥70%, amber 40-70%, red <40%), percentage display
+   122→   171→   171→   171→- Updated stats grid to 8 columns on lg, 4 on sm
+   123→   172→   172→   172→- Added "Copy All" button to EntryDetailSheet quick actions: copies all fields (platform, URL, username, email, password, notes) as formatted text
+   124→   173→   173→   173→- Added `ClipboardCopy` import to entry-detail-sheet.tsx
+   125→   174→   174→   174→- Added 7 new CSS utilities in globals.css:
+   126→   175→   175→   175→  - `.header-glow-line` — animated gradient line under vault header (2px, emerald/teal, sliding animation)
+   127→   176→   176→   176→  - `.card-gradient-hover` — gradient border that fades in on card hover (emerald/teal gradient, mask-based)
+   128→   177→   177→   177→  - Dialog overlay glow — enhanced backdrop with blur
+   129→   178→   178→   178→  - `.skeleton-shimmer` — shimmer animation for skeleton loading elements
+   130→   179→   179→   179→  - `.empty-pulse-ring` — pulsing ring around empty state vault icon
+   131→   180→   180→   180→  - `.btn-gradient-primary` — gradient background button (emerald→teal) with hover lift/glow
+   132→   181→   181→   181→  - `.scrollbar-none` — hide scrollbar utility
+   133→   182→   182→   182→- Applied `header-glow-line` to vault header
+   134→   183→   183→   183→- Applied `empty-pulse-ring` to empty state vault icon
+   135→   184→   184→   184→- Enhanced empty state: added "All passwords encrypted with AES-256-GCM" sub-text, gradient CTA button
+   136→   185→   185→   185→- Enhanced skeleton loading: added platform icon + title skeleton, rounded field skeletons with shimmer
+   137→   186→   186→   186→- Enhanced RecentlyUsedSection: staggered slide-up animation per item, hover scale effect, category-colored left border accent
+   138→   187→   187→   187→- Fixed runtime error: `CATEGORIES` not imported in page.tsx (used in RecentlyUsedSection) — added to import
+   139→   188→   188→   188→- Bumped APP_VERSION to v0.3.0
+   140→   189→   189→   189→
+   141→   190→   190→   190→Stage Summary:
+   142→   191→   191→   191→- Current project status description/assessment:
+   143→   192→   192→   192→  The Password Vault is fully stable and feature-rich at v0.3.0. All 8 stat cards work (Total, Favorites, Passwords, URLs, Accessed Today, Expiring Soon, Password Health, Top Category). 0 lint errors, 0 TypeScript errors. Dev server compiling successfully with no runtime errors. Full E2E verified via agent-browser.
+   144→   193→   193→   193→
+   145→   194→   194→   194→- Current goals/completed modifications/verification results:
+   146→   195→   195→   195→  - NEW: Favorites quick filter chip in vault header (toggle, amber highlight, dismiss badge)
+   147→   196→   196→   196→  - NEW: Password Health stat card (average strength percentage, dynamic color coding)
+   148→   197→   197→   197→  - NEW: Copy All button in entry detail sheet (copies all fields as formatted text)
+   149→   198→   198→   198→  - STYLE: Animated gradient header glow line (2px sliding emerald/teal)
+   150→   199→   199→   199→  - STYLE: Card gradient hover border effect (mask-based, fade-in on hover)
+   151→   200→   200→   200→  - STYLE: Dialog overlay with blur enhancement
+   152→   201→   201→   201→  - STYLE: Shimmer skeleton loading with structured card layout
+   153→   202→   202→   202→  - STYLE: Empty state pulse ring animation + encrypted sub-text + gradient CTA
+   154→   203→   203→   203→  - STYLE: Enhanced recently accessed section (staggered animation, category accent borders, hover scale)
+   155→   204→   204→   204→  - FIX: CATEGORIES import missing in page.tsx (runtime error)
+   156→   205→   205→   205→  - Verified: 0 lint errors, 0 TypeScript errors
+   157→   206→   206→   206→  - E2E Verified: Login → vault (8 stat cards) → favorites filter → detail sheet (Copy All button) → all entries visible
+   158→   207→   207→   207→
+   159→   208→   208→   208→- Unresolved issues or risks, and priority recommendations for the next phase:
+   160→   209→   209→   209→  1. Next.js Dev Tools overlay occasionally shows "stale" indicator — recommend closing/reopening browser between sessions
+   161→   210→   210→   210→  2. Consider adding: password generator presets (Passphrase, PIN, Strong) as quick-select buttons
+   162→   211→   211→   211→  3. Consider adding: TOTP/2FA secret storage field with QR code generation
+   163→   212→   212→   212→  4. Consider adding: CSV export format option alongside current encrypted JSON export
+   164→   213→   213→   213→  5. Consider adding: bulk select/delete operations (checkboxes on cards)
+   165→   214→   214→   214→  6. Consider adding: entry version history (track password changes over time)
+   166→   215→   215→   215→  7. Mobile responsive testing on real devices still recommended
+   167→   216→   216→   216→  8. Consider adding Framer Motion for page transition animations (currently using CSS only)
+   168→   217→   217→   217→
+   169→   218→   218→   218→---
+   170→   219→   219→   219→Task ID: 9
+   171→   220→   220→   220→Agent: Styling Agent
+   172→   221→   221→   221→Task: CSS polish - selection animations, card micro-interactions, visual refinements
+   173→   222→   222→   222→
+   174→   223→   223→   223→Work Log:
+   175→   224→   224→   224→- Added 7 new CSS animation classes and 4 new @keyframes to globals.css
+   176→   225→   225→   225→- `.select-check` — checkbox bounce animation (scale 0.8→1.1→1.0), emerald glow ring on active, border color transition on hover
+   177→   226→   226→   226→- `.bulk-bar` — slide-down from top animation, gradient background (emerald/5 → teal/3), animated gradient bottom border via pseudo-element
+   178→   227→   227→   227→- `.card-selected` — 3px emerald left border accent, subtle emerald background tint, elevated shadow, one-time shine sweep animation
+   179→   228→   228→   228→- `.stat-card-hover` — scale(1.02) + enhanced shadow on hover, gradient overlay fade-in via ::after, text-shadow glow on value text
+   180→   229→   229→   229→- `.row-selected` — 2px emerald left border, background slide-in from left (scaleX animation)
+   181→   230→   230→   230→- `.btn-press` — scale(0.97) + brightness(1.1) on :active, 100ms spring-back transition
+   182→   231→   231→   231→- Toast enhancement — slide-in from right + fade animation, 3px left border accent (emerald for success, red for error) targeting [data-sonner-toast]
+   183→   232→   232→   232→- Applied `bulk-bar` class to bulk action bar div in page.tsx (replacing `animate-slide-up`)
+   184→   233→   233→   233→- Applied `card-selected` class to EntryCard Card via `cn()` when `isSelected` is true
+   185→   234→   234→   234→- Applied `select-check` + `is-active` classes to EntryCard selection checkbox button
+   186→   235→   235→   235→- Applied `row-selected` class to EntryRow container div when `isSelected` is true
+   187→   236→   236→   236→- Applied `select-check` + `is-active` classes to EntryRow selection checkbox button
+   188→   237→   237→   237→- Applied `stat-card-hover` class to StatCard div in stats-overview.tsx
+   189→   238→   238→   238→- Verified: 0 TypeScript errors in src/ (tsc --noEmit)
+   190→   239→   239→   239→
+   191→   240→   240→   240→Stage Summary:
+   192→   241→   241→   241→- 7 new micro-interaction CSS classes added with oklch color values matching existing theme
+   193→   242→   242→   242→- 4 new @keyframes: check-bounce, bulk-slide-down, bulk-border-glow, card-select-shine, row-bg-slide, toast-slide-in
+   194→   243→   243→   243→- Selection states now have visual feedback: bounce animation on checkboxes, left-border accent + shine on cards, slide-in bg on rows
+   195→   244→   244→   244→- Bulk action bar has polished gradient background with animated bottom glow line
+   196→   245→   245→   245→- Stat cards have hover micro-animations (scale, shadow, gradient overlay, text glow)
+   197→   246→   246→   246→- Toasts have slide-in-from-right animation with colored left-border accent
+   198→   247→   247→   247→- All existing styles preserved, zero breaking changes
+   199→   248→   248→   248→---
+   200→   249→   249→   249→Task ID: 8
+   201→   250→   250→   250→Agent: Feature Agent
+   202→   251→   251→   251→Task: Notes preview in cards + Security Audit feature
+   203→   252→   252→   252→
+   204→   253→   253→   253→Work Log:
+   205→   254→   254→   254→- Added collapsible notes preview to EntryCard (entry-card.tsx): FileText icon + italic muted text, shows first 60 chars with "..." truncation, click to expand/collapse with ChevronDown rotation animation, only renders when data.other has content
+   206→   255→   255→   255→- Added notes column to EntryRow (entry-row.tsx): visible on xl screens only, positioned between Password and Modified columns, shows first 30 chars truncated with "..." and a FileText icon, small muted italic text
+   207→   256→   256→   256→- Added Security Audit button with ShieldCheck icon to VaultHeader (vault-header.tsx): positioned before Export button in desktop toolbar, also added to mobile dropdown menu
+   208→   257→   257→   257→- Created Security Audit Dialog using shadcn/ui Dialog + Progress components: shows overall security score (color-coded emerald/amber/red), progress bar, and 4 audit items (Total Entries, Weak Passwords <40%, Expired Passwords, Entries Without Notes)
+   209→   258→   258→   258→- Implemented audit scoring algorithm: starts at 100%, -5 per weak password, -3 per expired password, -1 per no-notes entry, clamped to 0
+   210→   259→   259→   259→- Created AuditItem helper component with variant-based color coding (neutral/success/warning/danger)
+   211→   260→   260→   260→- Bumped APP_VERSION from v0.3.0 to v0.3.1
+   212→   261→   261→   261→
+   213→   262→   262→   262→Stage Summary:
+   214→   263→   263→   263→- NEW: Collapsible notes preview on entry cards with FileText icon and 60-char truncation
+   215→   264→   264→   264→- NEW: Notes column in list view (xl breakpoint) with 30-char truncation
+   216→   265→   265→   265→- NEW: Security Audit dialog with overall score, progress bar, and 4 categorized audit metrics
+   217→   266→   266→   266→- Verified: 0 TypeScript errors in src/, 0 ESLint errors
+   218→   267→   267→   267→- Verified: Dev server compiles successfully
+   219→   268→   268→   268→
+   220→   269→   269→   269→---
+   221→   270→   270→   270→Task ID: 5
+   222→   271→   271→   271→Agent: Main Agent (Review & QA Round 5)
+   223→   272→   272→   272→Task: Fix critical TS errors from incomplete bulk selection, E2E test, add features + styling
+   224→   273→   273→   273→
+   225→   274→   274→   274→Work Log:
+   226→   275→   275→   275→- Discovered critical TypeScript errors left by incomplete bulk selection implementation from a previous session:
+   227→   276→   276→   276→  - entry-card.tsx: `selectedIds` referenced from store but not defined in VaultState interface
+   228→   277→   277→   277→  - entry-row.tsx: same `selectedIds` issue
+   229→   278→   278→   278→  - page.tsx: references to `hasSelection`, `allSelected`, `toggleSelectAll`, `selectedCount`, `removeEntries`, `selectedIds`, `clearSelection`, `Trash2` — all undefined
+   230→   279→   279→   279→  - page.tsx: `<RecentlyUsed />` should be `<RecentlyUsedSection />` (wrong component name)
+   231→   280→   280→   280→- Fixed ESLint by installing missing hermes-parser dependency
+   232→   281→   281→   281→- Added to VaultState store: `selectedIds: Set<string>`, `toggleSelect()`, `toggleSelectAll()`, `clearSelection()`, `removeEntries()`
+   233→   282→   282→   282→- Modified `removeEntry` and `setEntries` to also clear/reset selection state
+   234→   283→   283→   283→- Added `setFavoriteFilter` to clear selection on filter change
+   235→   284→   284→   284→- Fixed page.tsx: imported Trash2/CheckSquare/Square, added bulk selection variables, implemented `handleBulkDelete` (parallel API calls), rewrote bulk action bar with proper toggle button
+   236→   285→   285→   285→- Fixed entry-card.tsx: added `toggleSelect` to destructured store, made checkbox always visible and clickable (was only visible when selected), wired `toggleSelect(entry.id)` with stopPropagation
+   237→   286→   286→   286→- Fixed entry-row.tsx: same checkbox fix as entry-card
+   238→   287→   287→   287→- Full E2E testing via agent-browser:
+   239→   288→   288→   288→  - Registered new user (e2etest), vault created successfully
+   240→   289→   289→   289→  - Added 2 test entries (GitHub, Gmail)
+   241→   290→   290→   290→  - Verified bulk selection: Select/Deselect checkboxes, bulk action bar (Select all/Delete Selected/Cancel)
+   242→   291→   291→   291→  - Verified list view with selection checkboxes
+   243→   292→   292→   292→  - Verified entry detail sheet opens
+   244→   293→   293→   293→  - Verified Security Audit dialog: score 98%, 2 entries, 0 weak, 0 expired, 2 without notes
+   245→   294→   294→   294→  - Verified all 8 stat cards, Favorites filter, Grid/List toggle
+   246→   295→   295→   295→- Delegated to subagents:
+   247→   296→   296→   296→  - Feature Agent: Notes preview in cards/rows + Security Audit dialog
+   248→   297→   297→   297→  - Styling Agent: 7 CSS animation classes (select-check, bulk-bar, card-selected, stat-card-hover, row-selected, btn-press, toast enhancement)
+   249→   298→   298→   298→- Bumped APP_VERSION to v0.4.0
+   250→   299→   299→   299→
+   251→   300→   300→   300→Stage Summary:
+   252→   301→   301→   301→- CRITICAL FIX: Completed half-implemented bulk selection feature across 4 files (store, page, card, row)
+   253→   302→   302→   302→- CRITICAL FIX: Fixed `<RecentlyUsed />` → `<RecentlyUsedSection />` wrong component reference
+   254→   303→   303→   303→- FIX: Installed missing hermes-parser for ESLint
+   255→   304→   304→   304→- NEW: Bulk select/delete entries with animated action bar
+   256→   305→   305→   305→- NEW: Security Audit dialog with scoring algorithm
+   257→   306→   306→   306→- NEW: Collapsible notes preview on entry cards
+   258→   307→   307→   307→- NEW: Notes column in list view (xl breakpoint)
+   259→   308→   308→   308→- STYLE: 7 micro-interaction CSS classes with oklch colors
+   260→   309→   309→   309→- Verified: 0 TypeScript errors in src/, 0 ESLint errors
+   261→   310→   310→   310→- E2E VERIFIED: Register → vault → create entries → select cards → bulk bar → security audit → list view → detail sheet
+   262→   311→   311→   311→
+   263→   312→   312→   312→- 项目当前状态描述/判断:
+   264→   313→   313→   313→  Password Vault v0.4.0 稳定运行，所有 TypeScript/ESLint 检查通过。本轮修复了上一轮遗留的关键 TS 编译错误（未完成的批量选择功能），完成了该功能的完整实现，并通过子代理新增了安全审计对话框、笔记预览和大量 CSS 微交互动画。
+   265→   314→   314→   314→
+   266→   315→   315→   315→- 未解决问题或风险，建议下一阶段优先事项:
+   267→   316→   316→   316→  1. 密码生成器预设（Strong/Passphrase/PIN/Memorable）已存在，无需再添加
+   268→   317→   317→   317→  2. 考虑添加：TOTP/2FA 密钥存储字段及 QR 码生成
+   269→   318→   318→   318→  3. 考虑添加：CSV 导出格式选项
+   270→   319→   319→   319→  4. 考虑添加：条目版本历史（跟踪密码更改）
+   271→   320→   320→   320→  5. 考虑添加：Framer Motion 页面过渡动画
+   272→   321→   321→   321→  6. 移动端响应式建议在真实设备上测试
+   273→   322→   322→   322→  7. HIBP API 真实泄露检查可替换当前的本地评分
+   274→   323→   323→   323→
+   275→   324→   324→   324→---
+   276→   325→   325→   325→Task ID: 2-a
+   277→   326→   326→   326→Agent: Feature Agent
+   278→   327→   327→   327→Task: Add TOTP secret field and password change history
+   279→   328→   328→   328→
+   280→   329→   329→   329→Work Log:
+   281→   330→   330→   330→- Updated entry-form-dialog.tsx: added `totpSecret: ''` and `passwordHistory: []` to `emptyData` constant
+   282→   331→   331→   331→- Added TOTP Secret input field in EntryFormDialog after Notes section with KeyRound icon, monospace font, placeholder, helper text, and "Encrypted with your vault" badge
+   283→   332→   332→   332→- Updated `handleSave` in EntryFormDialog to track password changes: when editing, if password differs from original, push old password to `passwordHistory` array (capped at 10 entries)
+   284→   333→   333→   333→- Added Badge import to entry-form-dialog.tsx
+   285→   334→   334→   334→- Added KeyRound and History imports to entry-detail-sheet.tsx
+   286→   335→   335→   335→- Added "2FA Enabled" emerald badge in EntryDetailSheet header (next to category tag and expiry badge) when `data.totpSecret` is present
+   287→   336→   336→   336→- Added TOTP Secret display section in EntryDetailSheet credential fields area with KeyRound icon, monospace code block, and copy button
+   288→   337→   337→   337→- Updated "Copy All" button in EntryDetailSheet to include TOTP secret if present
+   289→   338→   338→   338→- Added Password History section in EntryDetailSheet (between Password Analysis and Metadata) with History icon header, last 5 entries shown with masked/revealed toggle per item, relative timestamps via date-fns, copy button per entry, and "Showing last 5 of N" note
+   290→   339→   339→   339→- Created PasswordHistoryItem component with individual reveal toggle and copy button
+   291→   340→   340→   340→- Added PasswordHistoryEntry type import from crypto.ts
+   292→   341→   341→   341→- Updated store/index.ts search filter to also search `data.totpSecret`
+   293→   342→   342→   342→- Added "2FA Enabled" stat card to StatsOverview with ShieldCheck icon, emerald color, counting entries with non-empty totpSecret
+   294→   343→   343→   343→- Updated stats grid from 8 to 9 columns on lg breakpoint
+   295→   344→   344→   344→
+   296→   345→   345→   345→Stage Summary:
+   297→   346→   346→   346→- NEW: TOTP Secret field in entry form with encrypted storage indicator badge
+   298→   347→   347→   347→- NEW: 2FA Enabled badge in entry detail sheet header
+   299→   348→   348→   348→- NEW: TOTP Secret display with copy button in entry detail sheet
+   300→   349→   349→   349→- NEW: Password change history tracking (auto-captures old passwords on edit, max 10)
+   301→   350→   350→   350→- NEW: Password History section in entry detail sheet with per-item reveal toggle and copy
+   302→   351→   351→   351→- NEW: "2FA Enabled" stat card in StatsOverview (9 stat cards total)
+   303→   352→   352→   352→- NEW: TOTP secret searchable via vault search
+   304→   353→   353→   353→- Verified: 0 ESLint errors, 0 TypeScript errors
+   305→   354→   354→   354→- Verified: Dev server compiles successfully
+   306→   355→   355→   355→---
+   307→   356→   356→   356→Task ID: 2-b
+   308→   357→   357→   357→Agent: Feature Agent
+   309→   358→   358→   358→Task: Add CSV export/import option
+   310→   359→   359→   359→
+   311→   360→   360→   360→Work Log:
+   312→   361→   361→   361→- Read worklog.md and existing import-export-dialog.tsx to understand current implementation
+   313→   362→   362→   362→- Read crypto.ts for VaultEntryData and PasswordHistoryEntry interfaces, encryptEntry/decryptEntry signatures
+   314→   363→   363→   363→- Read store/index.ts for DecryptedEntry type and state shape
+   315→   364→   364→   364→- Confirmed RadioGroup and Badge shadcn/ui components available
+   316→   365→   365→   365→- Added `exportFormat` state (`'json' | 'csv'`) and `importFormat` state (`'json' | 'csv'`) to component
+   317→   366→   366→   366→- Built export format selector with RadioGroup: "Encrypted JSON" (Lock icon, primary border) and "Plain CSV" (FileSpreadsheet icon, amber border, ShieldOff warning badge)
+   318→   367→   367→   367→- Implemented `handleCsvExport()`: generates CSV from already-decrypted store entries with all 12 columns, RFC 4180 compliant quoting, downloads as .csv file
+   319→   368→   368→   368→- Updated export button to dispatch `handleExportClick()` which routes to JSON or CSV handler based on format
+   320→   369→   369→   369→- Added amber warning box with AlertTriangle when CSV export is selected: warns about plaintext passwords
+   321→   370→   370→   370→- Built import format selector with RadioGroup for JSON/CSV, with same visual styling as export selector
+   322→   371→   371→   371→- Implemented `handleCsvImport()`: parses CSV with custom RFC 4180 parser, creates VaultEntryData objects, encrypts each with master password via encryptEntry(), POSTs encrypted entries to /api/vault/import endpoint
+   323→   372→   372→   372→- Updated file input accept attribute dynamically based on selected import format
+   324→   373→   373→   373→- Added auto-detection: when file is selected, importFormat auto-sets based on .json/.csv extension
+   325→   374→   374→   374→- Updated drag & drop handler to work with both formats
+   326→   375→   375→   375→- Added amber info box for CSV import explaining entries will be encrypted before storage
+   327→   376→   376→   376→- Updated dialog descriptions and button labels to reflect format-aware text
+   328→   377→   377→   377→- Fixed TypeScript error: explicitly typed `encryptedEntries` array to avoid `never[]` inference
+   329→   378→   378→   378→- Verified: 0 ESLint errors on import-export-dialog.tsx
+   330→   379→   379→   379→- Verified: 0 TypeScript errors in src/ (only pre-existing errors in examples/ and skills/)
+   331→   380→   380→   380→
+   332→   381→   381→   381→Stage Summary:
+   333→   382→   382→   382→- NEW: CSV export option alongside encrypted JSON export, with format radio selector and plaintext warning
+   334→   383→   383→   383→- NEW: CSV import option alongside JSON import, with auto-format detection and client-side encryption before upload
+   335→   384→   384→   384→- NEW: Custom RFC 4180 CSV parser that handles quoted fields with escaped double-quotes
+   336→   385→   385→   385→- NEW: ShieldOff warning badge on CSV options, amber visual treatment for plaintext-related UI
+   337→   386→   386→   386→- UI: Format selectors use RadioGroup with descriptive labels, icons, and contextual warnings
+   338→   387→   387→   387→- Verified: 0 TypeScript errors in src/, 0 ESLint errors, dev server compiling successfully
+   339→   388→   388→   388→---
+   340→   389→   389→   389→Task ID: 2-c
+   341→   390→   390→   390→Agent: Styling Agent
+   342→   391→   391→   391→Task: CSS polish - micro-interactions and visual refinements
+   343→   392→   392→   392→
+   344→   393→   393→   393→Work Log:
+   345→   394→   394→   394→- Added 16 new CSS animation/utility classes to end of globals.css (no existing styles modified or removed)
+   346→   395→   395→   395→  1. `.search-glow` — emerald glow ring + outer shadow on focus-within
+   347→   396→   396→   396→  2. `.chip-hover` — gradient overlay on hover via ::before pseudo-element, scale(0.96) on active
+   348→   397→   397→   397→  3. `.icon-btn-micro` — scale(1.08) on hover, scale(0.92) on active for icon buttons
+   349→   398→   398→   398→  4. `.password-dots-animate` — dots-appear keyframe (opacity + letter-spacing transition)
+   350→   399→   399→   399→  5. `.popover-glow` — enhanced shadow with emerald border ring for tooltips/popovers
+   351→   400→   400→   400→  6. `.progress-animated` — scaleX(0→1) fill animation on Progress bar inner div
+   352→   401→   401→   401→  7. `.badge-pulse` — infinite opacity pulse for attention-drawing badges
+   353→   402→   402→   402→  8. `.divider-gradient` — 1px gradient line (transparent→emerald→teal→emerald→transparent)
+   354→   403→   403→   403→  9. `.input-glow` — emerald underline on focus
+   355→   404→   404→   404→  10. `.card-entrance` — translateY(16px) + scale(0.96→1) entrance animation
+   356→   405→   405→   405→  11. `.sheet-content-animate` — staggered translateX(12px→0) entrance for sheet children
+   357→   406→   406→   406→  12. `.star-pop` — scale(1→1.3→1) bounce animation for favorite toggling
+   358→   407→   407→   407→  13. `.skeleton-wave` — realistic wave shimmer with oklch-matched colors
+   359→   408→   408→   408→  14. `.hover-underline` — width(0→100%) underline animation on hover
+   360→   409→   409→   409→  15. `.error-shake` — translateX(-4px↔4px) shake animation
+   361→   410→   410→   410→  16. `.number-flash` — emerald color + text-shadow flash on stat numbers
+   362→   411→   411→   411→- Applied `search-glow` to search input wrapper div in vault-header.tsx
+   363→   412→   412→   412→- Applied `chip-hover` to all 3 category filter chip button variants (All, Favorites, dynamic categories) in vault-header.tsx
+   364→   413→   413→   413→- Applied `progress-animated` to Security Audit dialog Progress component in vault-header.tsx
+   365→   414→   414→   414→- Applied `icon-btn-micro` to all 5 ghost Button elements in entry-card.tsx (star, edit, delete, eye/eyeoff toggle, copy buttons)
+   366→   415→   415→   415→- Applied `popover-glow` to TooltipContent in stats-overview.tsx StatCard
+   367→   416→   416→   416→- Applied `sheet-content-animate` to main content div in entry-detail-sheet.tsx
+   368→   417→   417→   417→- Replaced all 4 `<Separator />` usages with `<div className="divider-gradient" />` in entry-detail-sheet.tsx
+   369→   418→   418→   418→- Removed unused `Separator` import from entry-detail-sheet.tsx
+   370→   419→   419→   419→- Verified: 0 TypeScript errors in src/ (only pre-existing errors in examples/ and skills/)
+   371→   420→   420→   420→
+   372→   421→   421→   421→Stage Summary:
+   373→   422→   422→   422→- 16 new CSS micro-interaction classes added with oklch color values matching existing dark emerald/teal theme
+   374→   423→   423→   423→- 6 new @keyframes animations: dots-appear, progress-fill, badge-pulse, card-entrance, sheet-content-in, star-pop, skeleton-wave, error-shake, number-flash
+   375→   424→   424→   424→- Search input now has emerald glow ring on focus
+   376→   425→   425→   425→- Category filter chips have gradient overlay hover effect and active press scale
+   377→   426→   426→   426→- All icon buttons in entry cards have micro scale animations (1.08x hover, 0.92x active)
+   378→   427→   427→   427→- Security Audit progress bar has animated fill from left
+   379→   428→   428→   428→- Tooltip popups on stat cards have enhanced shadow with emerald border ring
+   380→   429→   429→   429→- Entry detail sheet content sections stagger-animate in from right
+   381→   430→   430→   430→- Sheet dividers replaced with gradient lines for visual polish
+   382→   431→   431→   431→- All existing styles preserved, zero breaking changes
+   383→   432→   432→   432→
+   384→   433→   433→   433→---
+   385→   434→   434→   434→Task ID: 6
+   386→   435→   435→   435→Agent: Main Agent (Round 5 — Finalization)
+   387→   436→   436→   436→Task: Finalization round — TOTP, CSV export, password history, CSS polish, version bump
+   388→   437→   437→   437→
+   389→   438→   438→   438→Work Log:
+   390→   439→   439→   439→- Planned and coordinated 3 parallel subagent tasks for finalization
+   391→   440→   440→   440→- Updated VaultEntryData interface in crypto.ts: added `totpSecret: string` and `passwordHistory: PasswordHistoryEntry[]`
+   392→   441→   441→   441→- Subagent 2-a: Added TOTP secret field to entry form + detail sheet, password change history tracking (auto-captures old passwords on edit, max 10), "2FA Enabled" stat card (9 total), TOTP in search
+   393→   442→   442→   442→- Subagent 2-b: Added CSV export/import alongside encrypted JSON, format radio selector with plaintext warning, auto-format detection for imports, RFC 4180 compliant CSV parsing
+   394→   443→   443→   443→- Subagent 2-c: Added 16 new CSS micro-interaction classes (search-glow, chip-hover, icon-btn-micro, password-dots-animate, popover-glow, progress-animated, badge-pulse, divider-gradient, card-entrance, sheet-content-animate, star-pop, skeleton-wave, hover-underline, error-shake, number-flash), applied to vault-header, entry-card, stats-overview, entry-detail-sheet
+   395→   444→   444→   444→- Bumped APP_VERSION from v0.4.0 to v0.5.0
+   396→   445→   445→   445→- Full E2E verification via agent-browser:
+   397→   446→   446→   446→  - Registered new user, vault created
+   398→   447→   447→   447→  - Created entry with TOTP secret (JBSWY3DPEHPK3PXP), verified "2FA Enabled: 1" stat card
+   399→   448→   448→   448→  - Opened detail sheet: confirmed "2FA Enabled" badge, TOTP copy button, Password History heading
+   400→   449→   449→   449→  - Edited entry to change password, reopened detail sheet: confirmed Password History section visible with old password
+   401→   450→   450→   450→  - Opened export dialog: confirmed format selector (Encrypted JSON / Plain CSV), CSV warning text, dynamic button label ("Export CSV")
+   402→   451→   451→   451→  - Confirmed all 9 stat cards rendering (Total, Favorites, With Password, With URL, Accessed Today, Expiring Soon, Password Health, Top Category, 2FA Enabled)
+   403→   452→   452→   452→
+   404→   453→   453→   453→Stage Summary:
+   405→   454→   454→   454→- APP VERSION: v0.5.0
+   406→   455→   455→   455→- NEW: TOTP/2FA secret storage field (encrypted, with copy button in detail sheet)
+   407→   456→   456→   456→- NEW: "2FA Enabled" emerald badge in entry detail sheet header
+   408→   457→   457→   457→- NEW: Password change history tracking (auto-captures on edit, shows last 5 in detail sheet with reveal/copy)
+   409→   458→   458→   458→- NEW: "2FA Enabled" stat card (9 stat cards total)
+   410→   459→   459→   459→- NEW: CSV export with plaintext warning alongside encrypted JSON export
+   411→   460→   460→   460→- NEW: CSV import with auto-format detection and client-side encryption
+   412→   461→   461→   461→- STYLE: 16 new CSS micro-interaction classes with 9 new @keyframes animations
+   413→   462→   462→   462→- STYLE: Search glow, chip hover effects, icon button micro-animations, progress bar fill animation, gradient dividers, sheet stagger animation
+   414→   463→   463→   463→- Verified: 0 TypeScript errors in src/, 0 ESLint errors, dev server compiling cleanly
+   415→   464→   464→   464→- E2E Verified: Register → vault → create entry with TOTP → detail sheet (2FA badge, TOTP, password history) → edit/change password → detail sheet (history visible) → export dialog (JSON/CSV format selector with warning)
+   416→   465→   465→   465→
+   417→   466→   466→   466→- 项目当前状态描述/判断:
+   418→   467→   467→   467→  Password Vault v0.5.0 已完成最终化。新增 TOTP/2FA 密钥存储、密码变更历史追踪、CSV 导入导出三大功能，加上 16 个新 CSS 微交互动画。所有功能通过 E2E 测试验证。应用已具备生产级密码管理器的完整功能集。
+   419→   468→   468→   468→
+   420→   469→   469→   469→- 未解决问题或风险，建议下一阶段优先事项:
+   421→   470→   470→   470→  1. 可考虑添加 Framer Motion 页面过渡动画（目前使用 CSS 动画，效果已足够好）
+   422→   471→   471→   471→  2. 可集成真实 HIBP API 替代本地密码泄露评分
+   423→   472→   472→   472→  3. 可添加 TOTP 代码实时生成显示（需要 OTP 计算库）
+   424→   473→   473→   473→  4. 移动端响应式建议在真实设备上测试
+   425→   474→   474→   474→  5. 可考虑添加条目自定义标签系统（超越分类系统）
+   426→   475→   475→   475→  6. 可添加密码强度趋势图表（基于历史数据）
+   427→   476→   476→   476→
+   428→   477→   477→   477→---
+   429→   478→   478→   478→Task ID: 4-a
+   430→   479→   479→   479→Agent: Feature Agent
+   431→   480→   480→   480→Task: Add custom tags system + password strength trend visualization
+   432→   481→   481→   481→
+   433→   482→   482→   482→Work Log:
+   434→   483→   483→   483→- Added `tags: string` field to `VaultEntryData` interface in `src/lib/crypto.ts` (comma-separated string)
+   435→   484→   484→   484→- Updated `src/store/index.ts`:
+   436→   485→   485→   485→  - Added `tagFilter: string` state with `setTagFilter` action (clears selection on change)
+   437→   486→   486→   486→  - Added `getTags()` getter returning `{ tag: string; count: number }[]` sorted by count
+   438→   487→   487→   487→  - Updated `getFilteredAndSorted()` to filter by tag and search within tags
+   439→   488→   488→   488→- Updated `src/components/vault/entry-form-dialog.tsx`:
+   440→   489→   489→   489→  - Added Tags input field after Category picker with `Tags` icon
+   441→   490→   490→   490→  - Implemented removable tag chips below the input (X button removes individual tags)
+   442→   491→   491→   491→  - Updated `emptyData` to include `tags: ''`
+   443→   492→   492→   492→- Updated `src/components/vault/entry-card.tsx`:
+   444→   493→   493→   493→  - Added tags row after category + expiry row with small emerald pill badges
+   445→   494→   494→   494→- Updated `src/components/vault/entry-detail-sheet.tsx`:
+   446→   495→   495→   495→  - Added "Tags" detail section after Notes (before TOTP) with emerald badge chips
+   447→   496→   496→   496→  - Implemented `StrengthTrend` component: pure CSS horizontal bar chart showing password strength over time
+   448→   497→   497→   497→  - Uses `calculateStrengthScore()` matching the existing audit scoring logic
+   449→   498→   498→   498→  - Bars colored by score level (red <40, amber 40-70, emerald >70)
+   450→   499→   499→   499→  - Current password bar highlighted with ring outline
+   451→   500→   500→   500→  - Only renders when 2+ entries (current + at least 1 history)
+   452→   501→   501→   501→  - CSS transitions (duration-700 ease-out) for smooth bar animations
+   453→   502→   502→   502→- Updated `src/components/vault/vault-header.tsx`:
+   454→   503→   503→   503→  - Added tag filter chips row after category filter chips
+   455→   504→   504→   504→  - Only shows when tags exist (from `getTags()`)
+   456→   505→   505→   505→  - "Filter:" label with `Tags` icon, "All" + individual tag chips
+   457→   506→   506→   506→  - Active tag gets emerald highlight, `chip-hover` micro-interaction class
+   458→   507→   507→   507→  - Scrollable horizontally with `scrollbar-none`
+   459→   508→   508→   508→- Updated `src/components/vault/stats-overview.tsx`:
+   460→   509→   509→   509→  - Added 10th stat card: "Tags Used" counting unique tags with `Tags` icon, teal color
+   461→   510→   510→   510→  - Changed grid from `lg:grid-cols-9` to `lg:grid-cols-5` (2 rows of 5)
+   462→   511→   511→   511→
+   463→   512→   512→   512→Stage Summary:
+   464→   513→   513→   513→- Custom tags system fully implemented across all components
+   465→   514→   514→   514→- Password strength trend visualization added to entry detail sheet
+   466→   515→   515→   515→- All changes backward-compatible (empty string defaults for existing entries)
+   467→   516→   516→   516→- 0 new TypeScript/ESLint errors introduced (pre-existing PlatformIcon errors unrelated)
+   468→   517→   517→   517→- Maintains dark emerald/teal oklch color system throughout
+   469→   518→   518→   518→
+   470→   519→   519→   519→---
+   471→   520→   520→   520→Task ID: 4-b
+   472→   521→   521→   521→Agent: Styling Agent
+   473→   522→   522→   522→Task: Auth screen enhancements + CSS micro-interactions
+   474→   523→   523→   523→
+   475→   524→   524→   524→Work Log:
+   476→   525→   525→   525→- Appended 12 new CSS utility classes to globals.css: tab-indicator, req-check-item, breathe-glow, input-group/toggle-btn, tag-chip, strength-bar, fade-in-up, border-glow-subtle, text-glow-emerald, skeleton-card, icon-spin, tooltip-arrow
+   477→   526→   526→   526→- Added corresponding keyframe animations: check-appear, breathe-glow, fade-in-up, skeleton-pulse, icon-spin
+   478→   527→   527→   527→- Enhanced AuthScreen vault icon: replaced emerald-glow-animate with breathe-glow for subtle breathing pulse effect
+   479→   528→   528→   528→- Added tab-indicator sliding underline to active Sign In / Register tab buttons
+   480→   529→   529→   529→- Added hover:bg-muted/50 effect to inactive tab buttons
+   481→   530→   530→   530→- Refactored login password input wrapper to use input-group class with toggle-btn positioning
+   482→   531→   531→   531→- Refactored register password input wrapper to use input-group class with toggle-btn positioning
+   483→   532→   532→   532→- Added password visibility toggle to confirm password field (was missing) with showRegConfirm state
+   484→   533→   533→   533→- Added inline password requirements checklist (min 8 chars, uppercase, number, symbol) with staggered req-check-item animations
+   485→   534→   534→   534→- Added "Created with AES-256-GCM encryption" text with Lock icon below auth card
+   486→   535→   535→   535→- Applied border-glow-subtle to EntryCard and EntryRow components
+   487→   536→   536→   536→- Added Check and Circle icon imports to page.tsx for requirement checklist
+   488→   537→   537→   537→- Removed inline pr-10 from password inputs (CSS input-group handles padding-right)
+   489→   538→   538→   538→
+   490→   539→   539→   539→Stage Summary:
+   491→   540→   540→   540→- All 0 new TypeScript errors (5 pre-existing errors in unrelated files)
+   492→   541→   541→   541→- Auth screen now has breathing glow, sliding tab indicator, password requirement checklist, confirm password toggle
+   493→   542→   542→   542→- 12 new reusable CSS micro-interaction classes available for future use
+   494→   543→   543→   543→- Files modified: src/app/globals.css, src/app/page.tsx, src/components/vault/entry-card.tsx, src/components/vault/entry-row.tsx
+   495→   544→   544→   544→
+   496→   545→   545→   545→---
+   497→   546→   546→   546→Task ID: 4-c
+   498→   547→   547→   547→Agent: Feature/Styling Agent
+   499→   548→   548→   548→Task: Entry card/row visual enhancements + footer improvements + more CSS
+   500→   549→   549→   549→
+   501→   550→   550→   550→Work Log:
+   502→   551→   551→   551→- Created `src/lib/platform-icons.tsx` with `PlatformIconDisplay` component that maps platform names to appropriate lucide-react icons (github→Github, google/gmail→Mail, twitter/x→MessageCircle, facebook/meta→Users, amazon→ShoppingCart, netflix/youtube/twitch→Play, slack/discord→MessageSquare, aws/digitalocean/vercel→Cloud, linkedin→Briefcase, reddit→Hash, spotify→Music, default→Globe)
+   503→   552→   552→   552→- Updated `src/components/vault/entry-card.tsx`: replaced static Globe icon with PlatformIconDisplay, added password strength indicator dot (green/amber/red based on score thresholds 70/40), enhanced notes preview with `notes-expanded` class for max-height + scrollbar + left border accent
+   504→   553→   553→   553→- Updated `src/components/vault/entry-row.tsx`: added platform icon display in list view, added `row-hover-accent` class for left-border accent on hover
+   505→   554→   554→   554→- Exported `calculateStrength` from `src/components/vault/password-strength-meter.tsx` for reuse
+   506→   555→   555→   555→- Enhanced footer in `src/app/page.tsx`: replaced plain border with gradient border (`footer-gradient-border`), added session active indicator with pulsing green dot, added keyboard shortcuts reminder (hidden on mobile/tablet), improved responsive layout with flex-col on mobile
+   507→   556→   556→   556→- Appended CSS to `src/app/globals.css`: platform icon color variants, strength dot classes, row hover accent, notes expanded, footer gradient border, session dot pulse animation, card content reveal, micro shine on hover
+   508→   557→   557→   557→
+   509→   558→   558→   558→Stage Summary:
+   510→   559→   559→   559→- 0 ESLint errors, clean compilation
+   511→   560→   560→   560→- Platform-specific icons now show in both grid (card) and list (row) views
+   512→   561→   561→   561→- Password strength dot provides at-a-glance security indicator on cards
+   513→   562→   562→   562→- Notes expansion has improved scrollability with emerald accent border
+   514→   563→   563→   563→- Row hover now shows subtle emerald left-border accent
+   515→   564→   564→   564→- Footer upgraded with gradient top border, session pulse indicator, and responsive keyboard shortcuts
+   516→   565→   565→   565→- 8 new CSS utility classes and 3 new keyframe animations added
+   517→   566→   566→   566→- Files created: src/lib/platform-icons.tsx
+   518→   567→   567→   567→- Files modified: src/components/vault/entry-card.tsx, src/components/vault/entry-row.tsx, src/components/vault/password-strength-meter.tsx, src/app/page.tsx, src/app/globals.css
+   519→   568→   568→   568→
+   520→   569→   569→   569→---
+   521→   570→   570→   570→Task ID: 7
+   522→   571→   571→   571→Agent: Main Agent (Round 6 — Cron Review)
+   523→   572→   572→   572→Task: QA + Custom Tags, Password Strength Trend, Auth Enhancements, Visual Polish
+   524→   573→   573→   573→
+   525→   574→   574→   574→Work Log:
+   526→   575→   575→   575→- Read worklog.md, confirmed v0.5.0 stable with 0 TS errors
+   527→   576→   576→   576→- E2E QA with agent-browser: login, grid/list view, search, favorites, bulk select, detail sheet (2FA, TOTP, password history), import dialog (JSON/CSV) — all passing
+   528→   577→   577→   577→- Dev log clean, no runtime errors
+   529→   578→   578→   578→- Fixed TS error: import-export-dialog.tsx CSV import missing `tags` field, CSV export missing Tags column
+   530→   579→   579→   579→- Launched 3 parallel agents:
+   531→   580→   580→   580→  - Agent 4-a: Custom Tags System + Password Strength Trend
+   532→   581→   581→   581→  - Agent 4-b: Auth Screen Enhancements + CSS Micro-interactions
+   533→   582→   582→   582→  - Agent 4-c: Entry Card/Row Enhancements + Footer Improvements
+   534→   583→   583→   583→- Agent 4-a results: tags field in VaultEntryData, tag filter in store, tag input in form, tag chips in card/detail sheet, tag filter chips in vault header, "Tags Used" stat card (10 total), StrengthTrend component in detail sheet
+   535→   584→   584→   584→- Agent 4-b results: password visibility toggle on auth, password requirements checklist (4 items with stagger animation), breathe-glow on vault icon, AES-256-GCM text below card, tab-indicator CSS, input-group/toggle-btn CSS, 12+ new CSS classes
+   536→   585→   585→   585→- Agent 4-c results: PlatformIconDisplay component (17+ platform icons), password strength dot on cards, notes expanded styling, row hover accent, enhanced footer with Session active dot + keyboard shortcuts + gradient border, 8 platform icon color classes, strength-dot classes, micro-shine hover effect
+   537→   586→   586→   586→- Bumped APP_VERSION to v0.6.0
+   538→   587→   587→   587→- Final E2E verification: login → vault (10 stat cards including "Tags Used: 3") → create entry with tags → tag filter chips (work, email, google) → tag filtering works → footer (Session active, shortcuts, AES-256-GCM) → screenshot saved
+   539→   588→   588→   588→
+   540→   589→   589→   589→Stage Summary:
+   541→   590→   590→   590→- BUG FIX: CSV import/export missing `tags` field — added to both paths
+   542→   591→   591→   591→- NEW: Custom Tags System — tags field on entries, comma-separated input with chip preview in form, tag filter chips in vault header, "Tags Used" stat card (10th), tags searchable, tags in detail sheet
+   543→   592→   592→   592→- NEW: Password Strength Trend — visual CSS bar chart in detail sheet showing strength over time based on password history, colored by score level, current password highlighted
+   544→   593→   593→   593→- NEW: Platform-Specific Icons — 17+ platform name mappings to appropriate lucide icons (Github→Github, Gmail→Mail, etc.), applied to both card and row views
+   545→   594→   594→   594→- NEW: Password Strength Dot — small colored dot on cards indicating password strength at a glance
+   546→   595→   595→   595→- NEW: Password Visibility Toggle — eye/eye-off toggle on auth screen password fields
+   547→   596→   596→   596→- NEW: Password Requirements Checklist — 4-item inline checklist on registration (min 8 chars, uppercase, number, symbol) with stagger animation
+   548→   597→   597→   597→- NEW: Enhanced Footer — "Session active" pulsing dot, keyboard shortcuts reminder, gradient top border
+   549→   598→   598→   598→- STYLE: 12+ new CSS classes (tab-indicator, breathe-glow, input-group, toggle-btn, tag-chip, strength-bar, fade-in-up, border-glow-subtle, text-glow-emerald, skeleton-card, icon-spin, tooltip-arrow)
+   550→   599→   599→   599→- STYLE: 8 platform icon color variant classes
+   551→   600→   600→   600→- STYLE: Strength dot classes with glow shadows
+   552→   601→   601→   601→- STYLE: Row hover accent (emerald left border transition)
+   553→   602→   602→   602→- STYLE: Notes expanded state (max-height, scrollbar, accent border)
+   554→   603→   603→   603→- STYLE: Footer gradient border with backdrop blur
+   555→   604→   604→   604→- STYLE: Micro-shine hover effect on cards
+   556→   605→   605→   605→- Verified: 0 TypeScript errors in src/, 0 ESLint errors, dev server compiling cleanly
+   557→   606→   606→   606→- E2E Verified: Login → vault → create entry with tags → Tags Used: 3 → tag filter → footer enhancements → screenshot
+   558→   607→   607→   607→
+   559→   608→   608→   608→- 项目当前状态描述/判断:
+   560→   609→   609→   609→  Password Vault v0.6.0 稳定运行。本轮通过 QA 确认无 bug，新增自定义标签系统（完整 CRUD + 筛选 + 统计）、密码强度趋势可视化、平台特定图标、密码可见性切换、注册要求清单、增强页脚等大量功能和样式。所有 10 个统计卡片、标签过滤、密码历史趋势图均通过 E2E 测试。
+   561→   610→   610→   610→
+   562→   611→   611→   611→- 未解决问题或风险，建议下一阶段优先事项:
+   563→   612→   612→   612→  1. 可添加 TOTP 实时代码生成显示（OTP 计算库）
+   564→   613→   613→   613→  2. 可添加 Framer Motion 页面过渡动画
+   565→   614→   614→   614→  3. 可集成真实 HIBP API 替代本地泄露评分
+   566→   615→   615→   615→  4. 可添加条目分组/文件夹功能
+   567→   616→   616→   616→  5. 可添加密码共享功能（加密链接）
+   568→   617→   617→   617→  6. 移动端响应式建议在真实设备上测试
+   569→   618→   618→   618→  7. 可添加数据备份提醒（基于时间间隔）
+   570→   619→   619→   619→  8. 可添加暗色/亮色主题切换（目前仅暗色）
+   571→   620→   620→   620→

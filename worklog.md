@@ -776,3 +776,23 @@ Stage Summary:
   5. 可添加数据备份提醒
   6. 可添加剪贴板自动清除（30秒后）
   7. 可添加其他密码管理器导入支持（1Password, Bitwarden）
+---
+Task ID: 9
+Agent: Main Agent
+Task: Fix version number display and dark/light mode CSS contrast issues
+
+Work Log:
+- Fixed version showing v0.1.0: Updated `src/app/api/version/route.ts` and `src/app/api/vault/export/route.ts` APP_VERSION from v0.1.0 to v0.7.0
+- Fixed critical dark mode CSS bug: All 10 `:root .xxx` light-mode overrides were applying in dark mode due to CSS specificity (`:root .glass-strong` = 0-2-0 beating `.glass-strong` = 0-1-0). Changed all to `:root:not(.dark) .xxx`:
+  - custom-scrollbar, emerald-glow, emerald-glow-sm, vault-bg, vault-bg-mesh, glass, glass-strong, footer-gradient-border, noise-bg::after
+- Improved light mode contrast: Updated `:root` CSS variables — foreground darkened (0.145→0.13), muted-foreground darkened (0.5→0.42), primary darkened (0.696→0.55), borders darkened (0.922→0.88), background slightly off-white (1→0.985)
+- Improved footer text contrast: Removed `/50` opacity from footer text-muted-foreground, bumped shortcuts from `/40` to `/60`
+- Improved header version text: Removed `/50` opacity from version display
+- VLM verified: Dark mode 5/5, Light mode 9/10 readability
+
+Stage Summary:
+- BUG FIX: Version number in header/footer now correctly shows v0.7.0
+- BUG FIX: Dark mode glass morphism backgrounds no longer forced to white — `:root:not(.dark)` selector fix
+- IMPROVED: Light mode color palette with better contrast ratios
+- IMPROVED: Footer and header text opacity for better readability
+- Verified: 0 ESLint errors, VLM-verified both themes

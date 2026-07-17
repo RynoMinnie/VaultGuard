@@ -611,7 +611,7 @@ function VaultScreen() {
             </div>
             <div>
               <h1 className="text-sm font-semibold leading-none tracking-tight">Password Vault</h1>
-              <p className="text-[10px] text-muted-foreground/50 font-mono">{versionInfo}</p>
+              <p className="text-[10px] text-muted-foreground font-mono">{versionInfo}</p>
             </div>
           </div>
 
@@ -760,18 +760,18 @@ function VaultScreen() {
 
       {/* Footer */}
       <footer className="footer-gradient-border mt-auto">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-2 text-[10px] text-muted-foreground/50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-2 text-[10px] text-muted-foreground">
           <div className="flex items-center gap-2">
             <span className="flex items-center gap-1.5">
               <span className="session-dot" />
               <span>Session active</span>
             </span>
-            <span className="hidden sm:inline text-muted-foreground/20">·</span>
+            <span className="hidden sm:inline text-muted-foreground/30">·</span>
             <span>Password Vault {versionInfo} — Zero-Knowledge Encryption</span>
           </div>
           <div className="flex items-center gap-3">
             <ThemeToggle />
-            <span className="hidden md:flex items-center gap-1 text-muted-foreground/40">
+            <span className="hidden md:flex items-center gap-1 text-muted-foreground/60">
               ⌘K Search · ⌘N New · Esc Clear
             </span>
             <span className="flex items-center gap-1">

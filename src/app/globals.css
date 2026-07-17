@@ -55,32 +55,32 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --background: oklch(0.985 0.002 155);
+  --foreground: oklch(0.13 0.02 155);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.13 0.02 155);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.696 0.17 162.48);
+  --popover-foreground: oklch(0.13 0.02 155);
+  --primary: oklch(0.55 0.17 162.48);
   --primary-foreground: oklch(0.985 0.015 155);
-  --secondary: oklch(0.97 0.014 155);
-  --secondary-foreground: oklch(0.205 0.05 155);
-  --muted: oklch(0.97 0.005 155);
-  --muted-foreground: oklch(0.5 0.02 155);
-  --accent: oklch(0.96 0.03 162);
-  --accent-foreground: oklch(0.205 0.05 155);
+  --secondary: oklch(0.94 0.014 155);
+  --secondary-foreground: oklch(0.25 0.04 155);
+  --muted: oklch(0.94 0.005 155);
+  --muted-foreground: oklch(0.42 0.015 155);
+  --accent: oklch(0.93 0.03 162);
+  --accent-foreground: oklch(0.25 0.04 155);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0.01 155);
-  --input: oklch(0.922 0.01 155);
-  --ring: oklch(0.696 0.17 162.48);
-  --chart-1: oklch(0.696 0.17 162.48);
-  --chart-2: oklch(0.65 0.15 175);
-  --chart-3: oklch(0.75 0.14 150);
-  --chart-4: oklch(0.55 0.18 168);
-  --chart-5: oklch(0.8 0.12 155);
-  --emerald: oklch(0.696 0.17 162.48);
+  --border: oklch(0.88 0.01 155);
+  --input: oklch(0.88 0.01 155);
+  --ring: oklch(0.55 0.17 162.48);
+  --chart-1: oklch(0.55 0.17 162.48);
+  --chart-2: oklch(0.5 0.15 175);
+  --chart-3: oklch(0.6 0.14 150);
+  --chart-4: oklch(0.45 0.18 168);
+  --chart-5: oklch(0.7 0.12 155);
+  --emerald: oklch(0.55 0.17 162.48);
   --emerald-foreground: oklch(0.985 0.015 155);
-  --teal: oklch(0.65 0.15 175);
+  --teal: oklch(0.5 0.15 175);
   --teal-foreground: oklch(0.985 0.015 175);
 }
 
@@ -188,10 +188,10 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: oklch(0.45 0.05 155);
 }
-:root .custom-scrollbar::-webkit-scrollbar-thumb {
+:root:not(.dark) .custom-scrollbar::-webkit-scrollbar-thumb {
   background: oklch(0.75 0.02 155);
 }
-:root .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+:root:not(.dark) .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: oklch(0.65 0.03 155);
 }
 
@@ -200,7 +200,7 @@
   box-shadow: 0 0 20px oklch(0.696 0.17 162.48 / 15%),
     0 0 60px oklch(0.696 0.17 162.48 / 5%);
 }
-:root .emerald-glow {
+:root:not(.dark) .emerald-glow {
   box-shadow: 0 0 20px oklch(0.696 0.17 162.48 / 8%),
     0 0 60px oklch(0.696 0.17 162.48 / 3%);
 }
@@ -208,7 +208,7 @@
 .emerald-glow-sm {
   box-shadow: 0 0 10px oklch(0.696 0.17 162.48 / 10%);
 }
-:root .emerald-glow-sm {
+:root:not(.dark) .emerald-glow-sm {
   box-shadow: 0 0 10px oklch(0.696 0.17 162.48 / 6%);
 }
 
@@ -249,7 +249,7 @@
   );
   background-size: 30px 30px;
 }
-:root .vault-bg {
+:root:not(.dark) .vault-bg {
   background-image: radial-gradient(
     oklch(0.696 0.17 162.48 / 6%) 1px,
     transparent 1px
@@ -262,7 +262,7 @@
     radial-gradient(at 80% 80%, oklch(0.65 0.15 175 / 4%) 0px, transparent 50%),
     radial-gradient(at 50% 50%, oklch(0.696 0.17 162.48 / 2%) 0px, transparent 70%);
 }
-:root .vault-bg-mesh {
+:root:not(.dark) .vault-bg-mesh {
   background-image:
     radial-gradient(at 20% 20%, oklch(0.696 0.17 162.48 / 10%) 0px, transparent 50%),
     radial-gradient(at 80% 80%, oklch(0.65 0.15 175 / 8%) 0px, transparent 50%),
@@ -298,7 +298,7 @@
   backdrop-filter: blur(16px) saturate(1.5);
   -webkit-backdrop-filter: blur(16px) saturate(1.5);
 }
-:root .glass {
+:root:not(.dark) .glass {
   background: oklch(1 0 0 / 60%);
 }
 
@@ -307,7 +307,7 @@
   backdrop-filter: blur(24px) saturate(1.8);
   -webkit-backdrop-filter: blur(24px) saturate(1.8);
 }
-:root .glass-strong {
+:root:not(.dark) .glass-strong {
   background: oklch(1 0 0 / 80%);
 }
 
@@ -1057,12 +1057,12 @@ select:focus-visible,
   backdrop-filter: blur(16px) saturate(1.5);
   -webkit-backdrop-filter: blur(16px) saturate(1.5);
 }
-:root .footer-gradient-border {
+:root:not(.dark) .footer-gradient-border {
   background: linear-gradient(90deg, transparent, oklch(0.696 0.17 162.48 / 15%), oklch(0.65 0.15 175 / 10%), oklch(0.696 0.17 162.48 / 15%), transparent) top / 100% 1px no-repeat,
               oklch(1 0 0 / 60%);
 }
 
-:root .noise-bg::after {
+:root:not(.dark) .noise-bg::after {
   opacity: 0.015;
 }
 

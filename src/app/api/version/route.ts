@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
-const APP_VERSION = 'v0.1.0';
+const APP_VERSION = 'v0.7.0';
 
 export async function GET() {
   try {

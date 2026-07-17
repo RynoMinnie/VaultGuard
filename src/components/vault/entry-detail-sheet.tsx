@@ -39,6 +39,7 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { CategoryTag, type CategoryId } from './category-tag';
+import { TOTPDisplay } from './totp-display';
 import { PasswordStrengthMeter } from './password-strength-meter';
 import { useVaultStore, type DecryptedEntry } from '@/store';
 import type { PasswordHistoryEntry } from '@/lib/crypto';
@@ -260,7 +261,7 @@ export function EntryDetailSheet({ entry, open, onOpenChange, onEdit, onDuplicat
             <Button
               variant="outline"
               size="sm"
-              className="flex-1 min-w-0 h-9 gap-1.5"
+              className="flex-1 min-w-0 h-9 sm:h-9 gap-1.5 touch-target"
               onClick={() => {
                 toggleFavorite(id);
                 toast.success(isFav ? 'Removed from favorites' : 'Added to favorites');
@@ -366,18 +367,7 @@ export function EntryDetailSheet({ entry, open, onOpenChange, onEdit, onDuplicat
               </div>
             )}
             {data.totpSecret && (
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground/60 flex items-center gap-1.5">
-                  <KeyRound className="h-4 w-4" />
-                  2FA / TOTP Secret
-                </label>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 rounded-lg bg-muted/40 px-3 py-2 font-mono text-sm break-all tracking-wide">
-                    {data.totpSecret}
-                  </code>
-                  <CopyBtn text={data.totpSecret} label="TOTP" />
-                </div>
-              </div>
+              <TOTPDisplay secret={data.totpSecret} label={data.platform} issuer="Password Vault" />
             )}
           </div>
 

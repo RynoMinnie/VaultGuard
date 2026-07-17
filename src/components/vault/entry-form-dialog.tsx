@@ -267,7 +267,7 @@ export function EntryFormDialog({
           <Separator className="opacity-50" />
 
           {/* Username + Email */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="username" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 Username

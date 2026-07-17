@@ -82,7 +82,7 @@ export function EntryRow({ entry, onEdit, onDelete }: EntryRowProps) {
   return (
     <div
       className={cn(
-        "group flex items-center gap-3 rounded-lg border border-border/40 bg-card/50 hover:bg-card/80 hover:border-primary/20 px-4 py-3 border-glow-subtle transition-all duration-200 cursor-pointer row-hover-accent",
+        "group flex items-center gap-3 rounded-lg border border-border/40 bg-card/50 hover:bg-card/80 hover:border-primary/20 px-4 py-3 border-glow-subtle transition-all duration-200 cursor-pointer row-hover-accent min-w-[500px]",
         isSelected && 'border-primary/40 bg-primary/5 row-selected'
       )}
       onClick={() => touchEntry(entry.id)}
@@ -184,7 +184,7 @@ export function EntryRow({ entry, onEdit, onDelete }: EntryRowProps) {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+      <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
         <Button
           variant="ghost"
           size="icon"

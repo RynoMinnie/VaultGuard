@@ -402,7 +402,7 @@ export function VaultHeader({
                 : 'border-border/50 text-muted-foreground hover:text-foreground hover:border-border'
             )}
           >
-            {CATEGORIES.find((c) => c.id === id)?.label || id}
+            <span className="truncate max-w-[120px] sm:max-w-none">{CATEGORIES.find((c) => c.id === id)?.label || id}</span>
             <span className="text-[10px] opacity-60">{count}</span>
           </button>
         ))}
@@ -437,7 +437,7 @@ export function VaultHeader({
                   : 'border-border/50 text-muted-foreground hover:text-foreground hover:border-border'
               )}
             >
-              {tag}
+              <span className="truncate max-w-[120px] sm:max-w-none">{tag}</span>
               <span className="text-[10px] opacity-60">{count}</span>
             </button>
           ))}

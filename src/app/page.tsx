@@ -22,6 +22,7 @@ import { ChangePasswordDialog } from '@/components/vault/change-password-dialog'
 import { CategoryTag, type CategoryId, CATEGORIES } from '@/components/vault/category-tag';
 import { EntryDetailSheet } from '@/components/vault/entry-detail-sheet';
 import { StatsOverview } from '@/components/vault/stats-overview';
+import { ThemeToggle } from '@/components/vault/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -52,7 +53,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const APP_VERSION = 'v0.6.0';
+const APP_VERSION = 'v0.7.0';
 
 // =============== AUTH SCREEN ===============
 function AuthScreen() {
@@ -171,7 +172,10 @@ function AuthScreen() {
   </div>
 
       <Card className="w-full max-w-md border-border/40 bg-card/70 backdrop-blur-2xl gradient-border noise-bg relative z-10 animate-fade-in">
-        <CardContent className="p-8">
+        <div className="absolute top-4 right-4 z-20">
+          <ThemeToggle />
+        </div>
+        <CardContent className="p-6 sm:p-8">
           {/* Logo with animated lock */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-primary/20 to-teal/10 mb-5 breathe-glow relative overflow-hidden">
@@ -395,8 +399,8 @@ function AuthScreen() {
         </CardContent>
       </Card>
       <p className="mt-4 flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground/40">
-        <Lock className="h-3 w-3" />
-        Created with AES-256-GCM encryption
+        <Lock className="h-3 w-3 shrink-0" />
+        <span>AES-256-GCM encrypted</span>
       </p>
     </div>
   );
@@ -410,19 +414,19 @@ function RecentlyUsedSection() {
   if (recent.length === 0) return null;
 
   return (
-    <div className="mb-6">
-      <div className="flex items-center gap-2 mb-3">
+    <div className="mb-6 -mx-3 sm:-mx-4 md:-mx-6">
+      <div className="flex items-center gap-2 mb-3 px-3 sm:px-4 md:px-6">
         <Clock className="h-4 w-4 text-primary/60" />
         <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Recently Accessed</h2>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+      <div className="flex gap-2 overflow-x-auto scrollbar-none px-3 sm:px-4 md:px-6">
         {recent.map((entry, i) => {
           const cat = entry.data.category;
           const catColor = cat ? CATEGORIES.find(c => c.id === cat)?.color.split(' ')[0] : '';
           return (
             <button
               key={entry.id}
-              className="group flex items-center gap-2.5 rounded-lg bg-muted/30 hover:bg-muted/60 border border-border/30 hover:border-primary/20 px-3 py-2.5 text-left transition-all duration-200 hover:emerald-glow-sm hover:scale-[1.02] animate-slide-up"
+              className="group flex items-center gap-2.5 rounded-lg bg-muted/30 hover:bg-muted/60 border border-border/30 hover:border-primary/20 px-3 py-2.5 text-left transition-all duration-200 hover:emerald-glow-sm hover:scale-[1.02] animate-slide-up shrink-0 w-36 sm:w-auto"
               style={{ animationDelay: `${i * 0.05}s`, borderLeftWidth: '3px', borderLeftColor: catColor ? undefined : 'transparent' }}
             >
               <div className="h-7 w-7 rounded-md bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
@@ -628,7 +632,7 @@ function VaultScreen() {
       </header>
 
       {/* Main content */}
-      <main className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-6">
+      <main className="flex-1 max-w-6xl mx-auto w-full px-3 sm:px-4 md:px-6 py-4 sm:py-6">
         <StatsOverview />
         <VaultHeader
           onAddEntry={handleAddEntry}
@@ -640,7 +644,7 @@ function VaultScreen() {
 
         {/* Bulk actions bar */}
         {hasSelection && (
-          <div className="flex items-center gap-2 mb-3 p-2.5 rounded-xl border border-primary/20 bg-primary/5 bulk-bar">
+          <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center gap-2 p-2.5 sm:p-3 border-t border-primary/20 bg-primary/5 glass-strong bulk-bar sm:rounded-xl sm:static sm:border sm:border-primary/20 pb-[calc(0.625rem+env(safe-area-inset-bottom))] sm:pb-2.5">
             <div className="flex items-center gap-1.5 text-sm">
               <button
                 onClick={() => toggleSelectAll(filteredEntries.map((e) => e.id))}
@@ -677,6 +681,7 @@ function VaultScreen() {
             </Button>
           </div>
         )}
+        {hasSelection && <div className="h-14 sm:h-0" />}
         <div className="mt-6">
           {isLoading ? (
             <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-2'}>
@@ -734,8 +739,8 @@ function VaultScreen() {
                   ))}
                 </div>
               ) : (
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-3 px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50 border-b border-border/30 mb-1">
+                <div className="space-y-1.5 overflow-x-auto">
+                  <div className="flex items-center gap-3 px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50 border-b border-border/30 mb-1 min-w-[500px]">
                     <div className="flex-1">Platform</div>
                     <div className="hidden md:block w-36">Username</div>
                     <div className="hidden lg:block w-44">Email</div>
@@ -765,6 +770,7 @@ function VaultScreen() {
             <span>Password Vault {versionInfo} — Zero-Knowledge Encryption</span>
           </div>
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <span className="hidden md:flex items-center gap-1 text-muted-foreground/40">
               ⌘K Search · ⌘N New · Esc Clear
             </span>

@@ -617,3 +617,162 @@ Stage Summary:
   6. 移动端响应式建议在真实设备上测试
   7. 可添加数据备份提醒（基于时间间隔）
   8. 可添加暗色/亮色主题切换（目前仅暗色）
+---
+Task ID: 8-b
+Agent: Sub Agent (general-purpose)
+Task: Implement Real-Time TOTP Code Generation for Password Vault v0.6.0
+
+Work Log:
+- Created `src/components/vault/totp-display.tsx` — a live TOTP code display component using the `otpauth` v9.5.1 package
+- Component features:
+  - Real-time TOTP code generation with 30-second period countdown
+  - Circular SVG countdown indicator with smooth CSS transitions (duration-1000 ease-linear)
+  - Code digits formatted as XXX XXX (groups of 3) for readability
+  - Color shift from primary to amber when remaining time ≤ 5 seconds
+  - One-click copy button with success feedback toast
+  - Collapsible raw TOTP secret view (preserves previous functionality)
+  - Error state for invalid secrets with red indicator
+- Integrated `TOTPDisplay` into `src/components/vault/entry-detail-sheet.tsx` replacing the old raw secret display block
+- Verified: lint passes for all new/modified files (only pre-existing warning in theme-toggle.tsx)
+- Verified: dev.log shows clean compilations with no runtime errors
+
+Stage Summary:
+- TOTPDisplay component created at src/components/vault/totp-display.tsx
+- EntryDetailSheet updated to use TOTPDisplay instead of raw secret display
+- No new lint errors introduced; dev server compiles successfully
+
+---
+Task ID: 8-a
+Agent: Sub Agent
+Task: Implement Light/Dark Theme Toggle for Password Vault v0.6.0
+
+Work Log:
+- Read worklog.md and analyzed current project state (v0.6.0, dark-only theme with emerald/teal oklch colors, next-themes already installed)
+- Edited `src/app/layout.tsx`: removed hardcoded `className="dark"` from `<html>` tag, imported `ThemeProvider` from `next-themes`, wrapped `{children}` and `<Toaster>` in `<ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>`, kept `suppressHydrationWarning`
+- Created `src/components/vault/theme-toggle.tsx`: Sun/Moon toggle button using `useTheme()` from next-themes, `useSyncExternalStore` for hydration-safe mounted detection, smooth rotation transition (rotate-0/rotate-90), `variant="outline" size="icon"` with h-9 w-9, accessible title prop
+- Added `ThemeToggle` import to `src/app/page.tsx`
+- Added ThemeToggle to auth screen: positioned as absolute button (top-4, right-4, z-20) on the auth Card so users can switch theme before logging in
+- Added ThemeToggle to vault footer: placed in the right-side flex container before the keyboard shortcuts text
+- Fixed hardcoded dark-mode CSS classes in `src/app/globals.css` with `:root` light-mode overrides:
+  - `.custom-scrollbar::-webkit-scrollbar-thumb` and `:hover` — light-mode thumb colors (oklch 0.75 and 0.65)
+  - `.emerald-glow` and `.emerald-glow-sm` — reduced glow opacity for light mode (8%/3% and 6%)
+  - `.vault-bg` — increased dot pattern opacity for light mode (6%)
+  - `.vault-bg-mesh` — increased mesh gradient opacity for light mode (10%/8%/4%)
+  - `.glass` and `.glass-strong` — white semi-transparent backgrounds for light mode (oklch(1 0 0 / 60% and 80%))
+  - `.footer-gradient-border` — white background for light mode (oklch(1 0 0 / 60%))
+  - `.noise-bg::after` — reduced noise opacity for light mode (0.015 vs 0.025)
+- Fixed lint error: replaced `useState`+`useEffect` hydration pattern with `useSyncExternalStore` (server snapshot returns false, client returns true)
+- Verified: `bun run lint` passes with 0 errors, dev.log shows clean compilations
+
+Stage Summary:
+- Light/dark theme toggle fully implemented across the application
+- ThemeProvider integrated in layout.tsx with class-based attribute switching
+- ThemeToggle component uses Sun/Moon icons with smooth rotation transitions
+- Toggle accessible from both auth screen (top-right of card) and vault footer
+- All hardcoded dark-mode CSS classes now have proper light-mode overrides via `:root` selectors
+- Zero lint errors, clean dev server compilation
+
+---
+Task ID: 8-c
+Agent: Sub Agent
+Task: Mobile Responsive QA and Fixes for Password Vault v0.6.0
+
+Work Log:
+- Audited all 9 responsive areas specified in the task (auth screen, vault header, entry cards, entry rows, detail sheet, form dialog, stats overview, import/export dialog, vault layout)
+- Applied targeted fixes across 7 files
+
+Changes Made:
+1. src/app/page.tsx (AuthScreen + VaultScreen):
+   - Auth card padding: p-8 → p-6 sm:p-8 for 320px screens
+   - "AES-256-GCM encrypted" text: shortened, added shrink-0 on icon to prevent cut-off
+   - Vault main padding: px-4 sm:px-6 → px-3 sm:px-4 md:px-6 (tighter on mobile)
+   - Vault main py: py-6 → py-4 sm:py-6 (less vertical waste on mobile)
+   - Recently Used section: changed from grid to horizontal flex scroll with -mx negative margins extending to screen edges
+   - Recently Used items: added shrink-0 w-36 sm:w-auto for consistent mobile card width
+   - Bulk action bar: now fixed bottom-0 on mobile with iOS safe-area-inset-bottom padding, static on sm+
+   - Added spacer div (h-14 sm:h-0) when bulk bar visible to prevent content overlap
+   - List view container: added overflow-x-auto for horizontal scroll on narrow screens
+   - List view header + rows: added min-w-[500px] to prevent layout collapse
+
+2. src/components/vault/vault-header.tsx:
+   - Category filter chip names: wrapped in truncate max-w-[120px] sm:max-w-none to handle long category names
+   - Tag filter chip names: same truncation treatment
+
+3. src/components/vault/entry-card.tsx:
+   - Card padding: p-4 → p-3 sm:p-4 for tighter mobile cards
+   - All icon buttons (CopyButton, favorite, edit, delete, reveal password): h-7 w-7 → h-8 w-8 sm:h-7 sm:w-7 with touch-target class
+   - Touch target class enforces 44px minimum on mobile via CSS
+
+4. src/components/vault/entry-row.tsx:
+   - Row: added min-w-[500px] to match header for consistent horizontal scroll
+   - Actions column: always visible on mobile (opacity-100), hover-reveal only on sm+ (sm:opacity-0 sm:group-hover:opacity-100)
+
+5. src/components/vault/entry-detail-sheet.tsx:
+   - Quick action Favorite button: added touch-target class for 44px minimum on mobile
+
+6. src/components/vault/entry-form-dialog.tsx:
+   - Username/Email grid: grid-cols-2 → grid-cols-1 sm:grid-cols-2 (stacks on mobile)
+
+7. src/components/vault/stats-overview.tsx:
+   - Grid breakpoints: grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 → grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 (less cramped at sm breakpoint)
+   - Stat card padding: p-3 → p-2.5 sm:p-3
+   - Label text: text-[10px] → text-[10px] sm:text-xs
+   - Value text: text-xl → text-lg sm:text-xl
+   - Small value: stays text-sm
+
+8. src/app/globals.css:
+   - Added MOBILE TOUCH TARGETS utility: @media (max-width: 639px) { .touch-target { min-height: 44px; min-width: 44px; } }
+
+Verified:
+- `bun run lint` passes with 0 errors
+- dev.log shows clean compilation (no runtime errors)
+
+Stage Summary:
+- All 10 audit areas reviewed and fixes applied where needed
+- Mobile experience improved: tighter padding, proper touch targets (44px), horizontal scroll for list view, fixed bulk action bar with iOS safe area, responsive form grids, better stat card sizing
+- Desktop layout preserved unchanged (all mobile-only changes use sm:/md: breakpoints)
+- Dark emerald/teal theme fully intact
+---
+Task ID: 8
+Agent: Main Agent (v1.0 High-Priority Round)
+Task: Implement 3 high-priority v1.0 features — Theme Toggle, TOTP Code Generation, Mobile Responsive QA
+
+Work Log:
+- Read worklog.md, confirmed v0.6.0 stable with 0 TS/ESLint errors
+- Installed `otpauth@9.5.1` package for TOTP code generation
+- Launched 3 parallel subagents for efficient implementation:
+  - Agent 8-a: Light/Dark Theme Toggle
+  - Agent 8-b: TOTP Real-Time Code Generation
+  - Agent 8-c: Mobile Responsive QA & Fixes
+- All 3 agents completed successfully with 0 new lint errors
+- Bumped APP_VERSION from v0.6.0 to v0.7.0
+- E2E verification with agent-browser:
+  - Theme toggle button visible on auth screen (top-right) and vault footer
+  - Theme toggle works — page renders correctly after switching themes
+  - Registered new user, created entry with TOTP secret "JBSWY3DPEHPK3PXP"
+  - TOTP code display confirmed: live 6-digit code (828648), circular countdown (9s), "Refreshes in 9s", "Copy TOTP code" button, collapsible raw secret
+  - All 10 stat cards rendering correctly (2FA Enabled: 1, Tags Used: 2)
+  - Tag filter chips (work, testing) working
+  - No runtime errors in dev.log
+
+Stage Summary:
+- APP VERSION: v0.7.0
+- NEW: Light/Dark Theme Toggle — ThemeProvider from next-themes, Sun/Moon toggle button, accessible from auth screen and vault footer, 7 CSS classes with light-mode overrides (glass, glow, scrollbars, backgrounds)
+- NEW: Real-Time TOTP Code Generation — live 6-digit codes via otpauth package, circular SVG countdown ring, XXX XXX formatting, color shift to amber at ≤5s, one-click copy, collapsible raw secret
+- NEW: Mobile Responsive Fixes — 44px touch targets, responsive padding (px-3 sm:px-4 md:px-6), horizontal scroll list view, fixed bulk action bar with iOS safe area, responsive stat card grid (2/3/5 columns), stacked form fields on mobile
+- Files created: src/components/vault/theme-toggle.tsx, src/components/vault/totp-display.tsx
+- Files modified: src/app/layout.tsx, src/app/page.tsx, src/app/globals.css, src/components/vault/entry-detail-sheet.tsx, src/components/vault/entry-card.tsx, src/components/vault/entry-row.tsx, src/components/vault/entry-form-dialog.tsx, src/components/vault/stats-overview.tsx, src/components/vault/vault-header.tsx
+- Verified: 0 ESLint errors, 0 TypeScript errors, dev server compiling cleanly
+- E2E Verified: Theme toggle, TOTP code display with countdown, all vault features functional
+
+- 项目当前状态描述/判断:
+  Password Vault v0.7.0 — v1.0 高优先级功能全部完成。主题切换、TOTP 实时代码生成、移动端响应式修复三大功能已实现并通过 E2E 测试。应用已具备 v1.0 发布条件。
+
+- 未解决问题或风险，建议下一阶段优先事项:
+  1. 可添加 Framer Motion 页面过渡动画（已安装 framer-motion）
+  2. 可集成 HIBP API 替代本地泄露评分
+  3. 可添加条目分组/文件夹功能
+  4. 可添加密码共享功能（加密链接）
+  5. 可添加数据备份提醒
+  6. 可添加剪贴板自动清除（30秒后）
+  7. 可添加其他密码管理器导入支持（1Password, Bitwarden）

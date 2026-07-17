@@ -1,0 +1,1075 @@
+     1→@import "tailwindcss";
+     2→@import "tw-animate-css";
+     3→
+     4→@custom-variant dark (&:is(.dark *));
+     5→
+     6→@theme inline {
+     7→  --color-background: var(--background);
+     8→  --color-foreground: var(--foreground);
+     9→  --font-sans: var(--font-geist-sans);
+    10→  --font-mono: var(--font-geist-mono);
+    11→  --color-sidebar-ring: var(--sidebar-ring);
+    12→  --color-sidebar-border: var(--sidebar-border);
+    13→  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    14→  --color-sidebar-accent: var(--sidebar-accent);
+    15→  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    16→  --color-sidebar-primary: var(--sidebar-primary);
+    17→  --color-sidebar-foreground: var(--sidebar-foreground);
+    18→  --color-sidebar: var(--sidebar);
+    19→  --color-chart-5: var(--chart-5);
+    20→  --color-chart-4: var(--chart-4);
+    21→  --color-chart-3: var(--chart-3);
+    22→  --color-chart-2: var(--chart-2);
+    23→  --color-chart-1: var(--chart-1);
+    24→  --color-ring: var(--ring);
+    25→  --color-input: var(--input);
+    26→  --color-border: var(--border);
+    27→  --color-destructive: var(--destructive);
+    28→  --color-accent-foreground: var(--accent-foreground);
+    29→  --color-accent: var(--accent);
+    30→  --color-muted-foreground: var(--muted-foreground);
+    31→  --color-muted: var(--muted);
+    32→  --color-secondary-foreground: var(--secondary-foreground);
+    33→  --color-secondary: var(--secondary);
+    34→  --color-primary-foreground: var(--primary-foreground);
+    35→  --color-primary: var(--primary);
+    36→  --color-popover-foreground: var(--popover-foreground);
+    37→  --color-popover: var(--popover);
+    38→  --color-card-foreground: var(--card-foreground);
+    39→  --color-card: var(--card);
+    40→  --radius-sm: calc(var(--radius) - 4px);
+    41→  --radius-md: calc(var(--radius) - 2px);
+    42→  --radius-lg: var(--radius);
+    43→  --radius-xl: calc(var(--radius) + 4px);
+    44→  --color-emerald: var(--emerald);
+    45→  --color-emerald-foreground: var(--emerald-foreground);
+    46→  --color-teal: var(--teal);
+    47→  --color-teal-foreground: var(--teal-foreground);
+    48→  --animate-fade-in: fade-in 0.5s ease-out;
+    49→  --animate-slide-up: slide-up 0.4s ease-out;
+    50→  --animate-scale-in: scale-in 0.2s ease-out;
+    51→  --animate-shimmer: shimmer 2s infinite;
+    52→  --animate-float: float 6s ease-in-out infinite;
+    53→  --animate-pulse-glow: pulse-glow 2s ease-in-out infinite;
+    54→}
+    55→
+    56→:root {
+    57→  --radius: 0.625rem;
+    58→  --background: oklch(1 0 0);
+    59→  --foreground: oklch(0.145 0 0);
+    60→  --card: oklch(1 0 0);
+    61→  --card-foreground: oklch(0.145 0 0);
+    62→  --popover: oklch(1 0 0);
+    63→  --popover-foreground: oklch(0.145 0 0);
+    64→  --primary: oklch(0.696 0.17 162.48);
+    65→  --primary-foreground: oklch(0.985 0.015 155);
+    66→  --secondary: oklch(0.97 0.014 155);
+    67→  --secondary-foreground: oklch(0.205 0.05 155);
+    68→  --muted: oklch(0.97 0.005 155);
+    69→  --muted-foreground: oklch(0.5 0.02 155);
+    70→  --accent: oklch(0.96 0.03 162);
+    71→  --accent-foreground: oklch(0.205 0.05 155);
+    72→  --destructive: oklch(0.577 0.245 27.325);
+    73→  --border: oklch(0.922 0.01 155);
+    74→  --input: oklch(0.922 0.01 155);
+    75→  --ring: oklch(0.696 0.17 162.48);
+    76→  --chart-1: oklch(0.696 0.17 162.48);
+    77→  --chart-2: oklch(0.65 0.15 175);
+    78→  --chart-3: oklch(0.75 0.14 150);
+    79→  --chart-4: oklch(0.55 0.18 168);
+    80→  --chart-5: oklch(0.8 0.12 155);
+    81→  --emerald: oklch(0.696 0.17 162.48);
+    82→  --emerald-foreground: oklch(0.985 0.015 155);
+    83→  --teal: oklch(0.65 0.15 175);
+    84→  --teal-foreground: oklch(0.985 0.015 175);
+    85→}
+    86→
+    87→.dark {
+    88→  --background: oklch(0.12 0.005 155);
+    89→  --foreground: oklch(0.95 0.01 155);
+    90→  --card: oklch(0.17 0.008 155);
+    91→  --card-foreground: oklch(0.95 0.01 155);
+    92→  --popover: oklch(0.17 0.008 155);
+    93→  --popover-foreground: oklch(0.95 0.01 155);
+    94→  --primary: oklch(0.696 0.17 162.48);
+    95→  --primary-foreground: oklch(0.12 0.02 162);
+    96→  --secondary: oklch(0.22 0.012 155);
+    97→  --secondary-foreground: oklch(0.92 0.015 155);
+    98→  --muted: oklch(0.22 0.012 155);
+    99→  --muted-foreground: oklch(0.65 0.03 155);
+   100→  --accent: oklch(0.22 0.02 162);
+   101→  --accent-foreground: oklch(0.92 0.015 155);
+   102→  --destructive: oklch(0.704 0.191 22.216);
+   103→  --border: oklch(0.28 0.015 155);
+   104→  --input: oklch(0.25 0.015 155);
+   105→  --ring: oklch(0.696 0.17 162.48);
+   106→  --chart-1: oklch(0.696 0.17 162.48);
+   107→  --chart-2: oklch(0.65 0.15 175);
+   108→  --chart-3: oklch(0.75 0.14 150);
+   109→  --chart-4: oklch(0.55 0.18 168);
+   110→  --chart-5: oklch(0.8 0.12 155);
+   111→  --sidebar: oklch(0.15 0.008 155);
+   112→  --sidebar-foreground: oklch(0.95 0.01 155);
+   113→  --sidebar-primary: oklch(0.696 0.17 162.48);
+   114→  --sidebar-primary-foreground: oklch(0.12 0.02 162);
+   115→  --sidebar-accent: oklch(0.22 0.02 162);
+   116→  --sidebar-accent-foreground: oklch(0.92 0.015 155);
+   117→  --sidebar-border: oklch(0.28 0.015 155);
+   118→  --sidebar-ring: oklch(0.696 0.17 162.48);
+   119→  --emerald: oklch(0.696 0.17 162.48);
+   120→  --emerald-foreground: oklch(0.12 0.02 162);
+   121→  --teal: oklch(0.65 0.15 175);
+   122→  --teal-foreground: oklch(0.12 0.02 175);
+   123→}
+   124→
+   125→@layer base {
+   126→  * {
+   127→    @apply border-border outline-ring/50;
+   128→  }
+   129→  body {
+   130→    @apply bg-background text-foreground;
+   131→  }
+   132→}
+   133→
+   134→/* ============ ANIMATIONS ============ */
+   135→@keyframes fade-in {
+   136→  from { opacity: 0; }
+   137→  to { opacity: 1; }
+   138→}
+   139→
+   140→@keyframes slide-up {
+   141→  from { opacity: 0; transform: translateY(12px); }
+   142→  to { opacity: 1; transform: translateY(0); }
+   143→}
+   144→
+   145→@keyframes scale-in {
+   146→  from { opacity: 0; transform: scale(0.95); }
+   147→  to { opacity: 1; transform: scale(1); }
+   148→}
+   149→
+   150→@keyframes shimmer {
+   151→  0% { background-position: -200% 0; }
+   152→  100% { background-position: 200% 0; }
+   153→}
+   154→
+   155→@keyframes float {
+   156→  0%, 100% { transform: translateY(0); }
+   157→  50% { transform: translateY(-8px); }
+   158→}
+   159→
+   160→@keyframes pulse-glow {
+   161→  0%, 100% { box-shadow: 0 0 15px oklch(0.696 0.17 162.48 / 10%), 0 0 45px oklch(0.696 0.17 162.48 / 5%); }
+   162→  50% { box-shadow: 0 0 25px oklch(0.696 0.17 162.48 / 20%), 0 0 80px oklch(0.696 0.17 162.48 / 8%); }
+   163→}
+   164→
+   165→@keyframes gradient-border {
+   166→  0% { background-position: 0% 50%; }
+   167→  50% { background-position: 100% 50%; }
+   168→  100% { background-position: 0% 50%; }
+   169→}
+   170→
+   171→@keyframes lock-bounce {
+   172→  0%, 100% { transform: translateY(0) rotate(0deg); }
+   173→  25% { transform: translateY(-3px) rotate(-2deg); }
+   174→  75% { transform: translateY(-1px) rotate(1deg); }
+   175→}
+   176→
+   177→/* ============ SCROLLBAR ============ */
+   178→.custom-scrollbar::-webkit-scrollbar {
+   179→  width: 6px;
+   180→}
+   181→.custom-scrollbar::-webkit-scrollbar-track {
+   182→  background: transparent;
+   183→}
+   184→.custom-scrollbar::-webkit-scrollbar-thumb {
+   185→  background: oklch(0.35 0.03 155);
+   186→  border-radius: 3px;
+   187→}
+   188→.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+   189→  background: oklch(0.45 0.05 155);
+   190→}
+   191→
+   192→/* ============ GLOW EFFECTS ============ */
+   193→.emerald-glow {
+   194→  box-shadow: 0 0 20px oklch(0.696 0.17 162.48 / 15%),
+   195→    0 0 60px oklch(0.696 0.17 162.48 / 5%);
+   196→}
+   197→
+   198→.emerald-glow-sm {
+   199→  box-shadow: 0 0 10px oklch(0.696 0.17 162.48 / 10%);
+   200→}
+   201→
+   202→.emerald-glow-animate {
+   203→  animation: pulse-glow 3s ease-in-out infinite;
+   204→}
+   205→
+   206→/* ============ GRADIENT BORDER ============ */
+   207→.gradient-border {
+   208→  position: relative;
+   209→}
+   210→.gradient-border::before {
+   211→  content: '';
+   212→  position: absolute;
+   213→  inset: 0;
+   214→  border-radius: inherit;
+   215→  padding: 1px;
+   216→  background: linear-gradient(
+   217→    135deg,
+   218→    oklch(0.696 0.17 162.48 / 40%),
+   219→    oklch(0.65 0.15 175 / 20%),
+   220→    oklch(0.696 0.17 162.48 / 40%)
+   221→  );
+   222→  background-size: 200% 200%;
+   223→  animation: gradient-border 4s ease infinite;
+   224→  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+   225→  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+   226→  -webkit-mask-composite: xor;
+   227→  mask-composite: exclude;
+   228→  pointer-events: none;
+   229→}
+   230→
+   231→/* ============ BACKGROUND PATTERNS ============ */
+   232→.vault-bg {
+   233→  background-image: radial-gradient(
+   234→    oklch(0.696 0.17 162.48 / 3%) 1px,
+   235→    transparent 1px
+   236→  );
+   237→  background-size: 30px 30px;
+   238→}
+   239→
+   240→.vault-bg-mesh {
+   241→  background-image:
+   242→    radial-gradient(at 20% 20%, oklch(0.696 0.17 162.48 / 6%) 0px, transparent 50%),
+   243→    radial-gradient(at 80% 80%, oklch(0.65 0.15 175 / 4%) 0px, transparent 50%),
+   244→    radial-gradient(at 50% 50%, oklch(0.696 0.17 162.48 / 2%) 0px, transparent 70%);
+   245→}
+   246→
+   247→/* ============ SHIMMER LOADING ============ */
+   248→.shimmer {
+   249→  background: linear-gradient(
+   250→    90deg,
+   251→    transparent 0%,
+   252→    oklch(0.696 0.17 162.48 / 8%) 50%,
+   253→    transparent 100%
+   254→  );
+   255→  background-size: 200% 100%;
+   256→  animation: shimmer 2s infinite;
+   257→}
+   258→
+   259→/* ============ LOCK ICON ANIMATION ============ */
+   260→.lock-icon-animate {
+   261→  animation: lock-bounce 3s ease-in-out infinite;
+   262→  transform-origin: bottom center;
+   263→}
+   264→
+   265→/* ============ FLOAT ANIMATION ============ */
+   266→.float-animate {
+   267→  animation: float 6s ease-in-out infinite;
+   268→}
+   269→
+   270→/* ============ GLASS MORPHISM ============ */
+   271→.glass {
+   272→  background: oklch(0.17 0.008 155 / 60%);
+   273→  backdrop-filter: blur(16px) saturate(1.5);
+   274→  -webkit-backdrop-filter: blur(16px) saturate(1.5);
+   275→}
+   276→
+   277→.glass-strong {
+   278→  background: oklch(0.17 0.008 155 / 80%);
+   279→  backdrop-filter: blur(24px) saturate(1.8);
+   280→  -webkit-backdrop-filter: blur(24px) saturate(1.8);
+   281→}
+   282→
+   283→/* ============ INPUT FOCUS GLOW ============ */
+   284→input:focus,
+   285→textarea:focus {
+   286→  box-shadow: 0 0 0 3px oklch(0.696 0.17 162.48 / 15%);
+   287→}
+   288→
+   289→/* ============ CARD HOVER LIFT ============ */
+   290→.card-hover-lift {
+   291→  transition: transform 0.2s ease, box-shadow 0.2s ease;
+   292→}
+   293→.card-hover-lift:hover {
+   294→  transform: translateY(-2px);
+   295→}
+   296→
+   297→/* ============ STAGGER ANIMATION FOR CHILDREN ============ */
+   298→.stagger-children > * {
+   299→  animation: slide-up 0.4s ease-out both;
+   300→}
+   301→.stagger-children > *:nth-child(1) { animation-delay: 0.03s; }
+   302→.stagger-children > *:nth-child(2) { animation-delay: 0.06s; }
+   303→.stagger-children > *:nth-child(3) { animation-delay: 0.09s; }
+   304→.stagger-children > *:nth-child(4) { animation-delay: 0.12s; }
+   305→.stagger-children > *:nth-child(5) { animation-delay: 0.15s; }
+   306→.stagger-children > *:nth-child(6) { animation-delay: 0.18s; }
+   307→.stagger-children > *:nth-child(7) { animation-delay: 0.21s; }
+   308→.stagger-children > *:nth-child(8) { animation-delay: 0.24s; }
+   309→.stagger-children > *:nth-child(9) { animation-delay: 0.27s; }
+   310→.stagger-children > *:nth-child(10) { animation-delay: 0.30s; }
+   311→.stagger-children > *:nth-child(n+11) { animation-delay: 0.33s; }
+   312→
+   313→/* ============ NOISE TEXTURE ============ */
+   314→.noise-bg {
+   315→  position: relative;
+   316→  overflow: hidden;
+   317→}
+   318→.noise-bg::after {
+   319→  content: '';
+   320→  position: absolute;
+   321→  inset: 0;
+   322→  border-radius: inherit;
+   323→  opacity: 0.025;
+   324→  pointer-events: none;
+   325→  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+   326→  background-size: 128px 128px;
+   327→}
+   328→
+   329→/* ============ FOCUS RING ANIMATION ============ */
+   330→@keyframes focus-ring-pulse {
+   331→  0%, 100% { box-shadow: 0 0 0 2px oklch(0.696 0.17 162.48 / 0.25); }
+   332→  50% { box-shadow: 0 0 0 4px oklch(0.696 0.17 162.48 / 0.1); }
+   333→}
+   334→
+   335→:focus-visible {
+   336→  outline: none;
+   337→  animation: focus-ring-pulse 1.5s ease-in-out 1;
+   338→}
+   339→
+   340→button:focus-visible,
+   341→a:focus-visible,
+   342→input:focus-visible,
+   343→textarea:focus-visible,
+   344→select:focus-visible,
+   345→[role="button"]:focus-visible {
+   346→  box-shadow: 0 0 0 2px oklch(0.696 0.17 162.48 / 0.3);
+   347→  animation: focus-ring-pulse 1.5s ease-in-out 1;
+   348→}
+   349→
+   350→/* ============ SCREEN TRANSITION ============ */
+   351→@keyframes screen-enter {
+   352→  from {
+   353→    opacity: 0;
+   354→    transform: translateY(16px) scale(0.98);
+   355→  }
+   356→  to {
+   357→    opacity: 1;
+   358→    transform: translateY(0) scale(1);
+   359→  }
+   360→}
+   361→
+   362→.screen-transition {
+   363→  animation: screen-enter 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+   364→}
+   365→
+   366→/* ============ AUTHENTICATING LOADING OVERLAY ============ */
+   367→@keyframes vault-unlock {
+   368→  0% { transform: rotate(0deg); }
+   369→  30% { transform: rotate(-10deg); }
+   370→  60% { transform: rotate(5deg); }
+   371→  100% { transform: rotate(0deg); }
+   372→}
+   373→
+   374→.auth-loading-icon {
+   375→  animation: vault-unlock 1.2s ease-in-out infinite;
+   376→}
+   377→
+   378→/* ============ HEADER GLOW LINE ============ */
+   379→.header-glow-line {
+   380→  position: relative;
+   381→}
+   382→.header-glow-line::after {
+   383→  content: '';
+   384→  position: absolute;
+   385→  bottom: -1px;
+   386→  left: 0;
+   387→  right: 0;
+   388→  height: 2px;
+   389→  background: linear-gradient(
+   390→    90deg,
+   391→    transparent 0%,
+   392→    oklch(0.696 0.17 162.48 / 40%) 20%,
+   393→    oklch(0.65 0.15 175 / 60%) 50%,
+   394→    oklch(0.696 0.17 162.48 / 40%) 80%,
+   395→    transparent 100%
+   396→  );
+   397→  background-size: 200% 100%;
+   398→  animation: header-glow-slide 4s ease-in-out infinite;
+   399→}
+   400→
+   401→@keyframes header-glow-slide {
+   402→  0% { background-position: 100% 0; }
+   403→  100% { background-position: -100% 0; }
+   404→}
+   405→
+   406→/* ============ CARD GRADIENT HOVER ============ */
+   407→.card-gradient-hover {
+   408→  position: relative;
+   409→}
+   410→.card-gradient-hover::before {
+   411→  content: '';
+   412→  position: absolute;
+   413→  inset: 0;
+   414→  border-radius: inherit;
+   415→  padding: 1px;
+   416→  background: linear-gradient(
+   417→    135deg,
+   418→    oklch(0.696 0.17 162.48 / 0%),
+   419→    oklch(0.65 0.15 175 / 0%),
+   420→    oklch(0.696 0.17 162.48 / 0%)
+   421→  );
+   422→  background-size: 200% 200%;
+   423→  transition: background 0.4s ease;
+   424→  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+   425→  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+   426→  -webkit-mask-composite: xor;
+   427→  mask-composite: exclude;
+   428→  pointer-events: none;
+   429→  opacity: 0;
+   430→}
+   431→.card-gradient-hover:hover::before {
+   432→  opacity: 1;
+   433→  background: linear-gradient(
+   434→    135deg,
+   435→    oklch(0.696 0.17 162.48 / 50%),
+   436→    oklch(0.65 0.15 175 / 30%),
+   437→    oklch(0.696 0.17 162.48 / 50%)
+   438→  );
+   439→  background-size: 200% 200%;
+   440→  animation: gradient-border 4s ease infinite;
+   441→}
+   442→
+   443→/* ============ DIALOG OVERLAY GLOW ============ */
+   444→[data-state="open"] > [data-radix-overlay] {
+   445→  background: oklch(0 0 0 / 60%) !important;
+   446→  backdrop-filter: blur(4px);
+   447→}
+   448→
+   449→/* ============ ENHANCED SHIMMER SKELETON ============ */
+   450→.skeleton-shimmer {
+   451→  background: linear-gradient(
+   452→    90deg,
+   453→    oklch(0.22 0.012 155 / 30%) 0%,
+   454→    oklch(0.22 0.012 155 / 50%) 50%,
+   455→    oklch(0.22 0.012 155 / 30%) 100%
+   456→  );
+   457→  background-size: 200% 100%;
+   458→  animation: shimmer 2s infinite;
+   459→}
+   460→
+   461→/* ============ EMPTY STATE PULSE RING ============ */
+   462→@keyframes empty-pulse-ring {
+   463→  0% { box-shadow: 0 0 0 0 oklch(0.696 0.17 162.48 / 15%); }
+   464→  70% { box-shadow: 0 0 0 20px oklch(0.696 0.17 162.48 / 0%); }
+   465→  100% { box-shadow: 0 0 0 0 oklch(0.696 0.17 162.48 / 0%); }
+   466→}
+   467→
+   468→.empty-pulse-ring {
+   469→  animation: empty-pulse-ring 2.5s ease-out infinite;
+   470→}
+   471→
+   472→/* ============ GRADIENT BUTTON ============ */
+   473→.btn-gradient-primary {
+   474→  background: linear-gradient(135deg, oklch(0.696 0.17 162.48), oklch(0.65 0.15 175));
+   475→  transition: all 0.2s ease;
+   476→}
+   477→.btn-gradient-primary:hover {
+   478→  box-shadow: 0 4px 20px oklch(0.696 0.17 162.48 / 30%);
+   479→  transform: translateY(-1px);
+   480→}
+   481→
+   482→/* ============ SCROLLBAR NONE ============ */
+   483→.scrollbar-none::-webkit-scrollbar {
+   484→  display: none;
+   485→}
+   486→.scrollbar-none {
+   487→  -ms-overflow-style: none;
+   488→  scrollbar-width: none;
+   489→}
+   490→
+   491→/* ============ SELECTION CHECKBOX ANIMATION ============ */
+   492→@keyframes check-bounce {
+   493→  0% { transform: scale(0.8); }
+   494→  50% { transform: scale(1.1); }
+   495→  100% { transform: scale(1.0); }
+   496→}
+   497→
+   498→.select-check {
+   499→  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+   500→}
+   501→.select-check:hover {
+   502→  border-color: oklch(0.696 0.17 162.48 / 60%) !important;
+   503→}
+   504→.select-check[style*="var(--primary)"],
+   505→.select-check.is-active {
+   506→  animation: check-bounce 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+   507→  box-shadow: 0 0 0 3px oklch(0.696 0.17 162.48 / 20%), 0 0 12px oklch(0.696 0.17 162.48 / 15%);
+   508→}
+   509→
+   510→/* ============ BULK ACTION BAR ============ */
+   511→@keyframes bulk-slide-down {
+   512→  from {
+   513→    opacity: 0;
+   514→    transform: translateY(-4px);
+   515→  }
+   516→  to {
+   517→    opacity: 1;
+   518→    transform: translateY(0);
+   519→  }
+   520→}
+   521→
+   522→@keyframes bulk-border-glow {
+   523→  0%, 100% { background-position: 0% 50%; }
+   524→  50% { background-position: 100% 50%; }
+   525→}
+   526→
+   527→.bulk-bar {
+   528→  animation: bulk-slide-down 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+   529→  background: linear-gradient(135deg, oklch(0.696 0.17 162.48 / 5%), oklch(0.65 0.15 175 / 3%));
+   530→  border: none;
+   531→  position: relative;
+   532→}
+   533→.bulk-bar::after {
+   534→  content: '';
+   535→  position: absolute;
+   536→  bottom: 0;
+   537→  left: 0;
+   538→  right: 0;
+   539→  height: 2px;
+   540→  border-radius: 0 0 12px 12px;
+   541→  background: linear-gradient(90deg, transparent, oklch(0.696 0.17 162.48 / 40%), oklch(0.65 0.15 175 / 25%), oklch(0.696 0.17 162.48 / 40%), transparent);
+   542→  background-size: 200% 100%;
+   543→  animation: bulk-border-glow 3s ease-in-out infinite;
+   544→}
+   545→
+   546→/* ============ CARD SELECTION STATE ============ */
+   547→@keyframes card-select-shine {
+   548→  0% { opacity: 0; transform: translateX(-100%); }
+   549→  50% { opacity: 1; }
+   550→  100% { opacity: 0; transform: translateX(100%); }
+   551→}
+   552→
+   553→.card-selected {
+   554→  border-left: 3px solid oklch(0.696 0.17 162.48) !important;
+   555→  background: oklch(0.696 0.17 162.48 / 4%) !important;
+   556→  box-shadow: 0 2px 16px oklch(0.696 0.17 162.48 / 8%), 0 0 0 1px oklch(0.696 0.17 162.48 / 10%);
+   557→  position: relative;
+   558→  overflow: hidden;
+   559→}
+   560→.card-selected::before {
+   561→  content: '';
+   562→  position: absolute;
+   563→  inset: 0;
+   564→  background: linear-gradient(90deg, oklch(0.696 0.17 162.48 / 6%), transparent);
+   565→  animation: card-select-shine 0.5s ease-out;
+   566→  pointer-events: none;
+   567→}
+   568→
+   569→/* ============ STAT CARD HOVER ============ */
+   570→.stat-card-hover {
+   571→  transition: transform 0.2s ease, box-shadow 0.2s ease;
+   572→  position: relative;
+   573→  overflow: hidden;
+   574→}
+   575→.stat-card-hover:hover {
+   576→  transform: scale(1.02);
+   577→  box-shadow: 0 4px 20px oklch(0 0 0 / 15%);
+   578→}
+   579→.stat-card-hover::after {
+   580→  content: '';
+   581→  position: absolute;
+   582→  inset: 0;
+   583→  border-radius: inherit;
+   584→  background: linear-gradient(135deg, oklch(0.696 0.17 162.48 / 5%), oklch(0.65 0.15 175 / 3%));
+   585→  opacity: 0;
+   586→  transition: opacity 0.3s ease;
+   587→  pointer-events: none;
+   588→}
+   589→.stat-card-hover:hover::after {
+   590→  opacity: 1;
+   591→}
+   592→.stat-card-hover:hover p {
+   593→  text-shadow: 0 0 12px oklch(0.696 0.17 162.48 / 30%);
+   594→}
+   595→
+   596→/* ============ ROW SELECTION STATE ============ */
+   597→@keyframes row-bg-slide {
+   598→  from { transform: scaleX(0); }
+   599→  to { transform: scaleX(1); }
+   600→}
+   601→
+   602→.row-selected {
+   603→  border-left: 2px solid oklch(0.696 0.17 162.48) !important;
+   604→  position: relative;
+   605→  overflow: hidden;
+   606→}
+   607→.row-selected::before {
+   608→  content: '';
+   609→  position: absolute;
+   610→  inset: 0;
+   611→  left: 2px;
+   612→  background: linear-gradient(90deg, oklch(0.696 0.17 162.48 / 8%), oklch(0.696 0.17 162.48 / 2%));
+   613→  transform-origin: left;
+   614→  animation: row-bg-slide 0.3s ease-out both;
+   615→  pointer-events: none;
+   616→  z-index: 0;
+   617→}
+   618→
+   619→/* ============ BUTTON PRESS FEEDBACK ============ */
+   620→.btn-press {
+   621→  transition: transform 0.1s ease, filter 0.1s ease;
+   622→}
+   623→.btn-press:active {
+   624→  transform: scale(0.97);
+   625→  filter: brightness(1.1);
+   626→  transition: transform 0.1s ease, filter 0.05s ease;
+   627→}
+   628→
+   629→/* ============ TOAST ENHANCEMENT ============ */
+   630→@keyframes toast-slide-in {
+   631→  from {
+   632→    opacity: 0;
+   633→    transform: translateX(100%);
+   634→  }
+   635→  to {
+   636→    opacity: 1;
+   637→    transform: translateX(0);
+   638→  }
+   639→}
+   640→
+   641→[data-sonner-toast][data-type="success"] {
+   642→  border-left: 3px solid oklch(0.696 0.17 162.48);
+   643→  animation: toast-slide-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+   644→}
+   645→
+   646→[data-sonner-toast][data-type="error"] {
+   647→  border-left: 3px solid oklch(0.577 0.245 27.325);
+   648→  animation: toast-slide-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+   649→}
+   650→
+   651→/* ============ SEARCH INPUT ENHANCEMENT ============ */
+   652→.search-glow {
+   653→  transition: all 0.3s ease;
+   654→}
+   655→.search-glow:focus-within {
+   656→  box-shadow: 0 0 0 2px oklch(0.696 0.17 162.48 / 20%), 0 0 20px oklch(0.696 0.17 162.48 / 8%);
+   657→}
+   658→
+   659→/* ============ CATEGORY CHIP HOVER ============ */
+   660→.chip-hover {
+   661→  transition: all 0.2s ease;
+   662→  position: relative;
+   663→  overflow: hidden;
+   664→}
+   665→.chip-hover::before {
+   666→  content: '';
+   667→  position: absolute;
+   668→  inset: 0;
+   669→  background: linear-gradient(135deg, oklch(0.696 0.17 162.48 / 15%), oklch(0.65 0.15 175 / 10%));
+   670→  opacity: 0;
+   671→  transition: opacity 0.2s ease;
+   672→  border-radius: inherit;
+   673→  pointer-events: none;
+   674→}
+   675→.chip-hover:hover::before {
+   676→  opacity: 1;
+   677→}
+   678→.chip-hover:active {
+   679→  transform: scale(0.96);
+   680→}
+   681→
+   682→/* ============ ICON BUTTON MICRO ============ */
+   683→.icon-btn-micro {
+   684→  transition: all 0.15s ease;
+   685→}
+   686→.icon-btn-micro:hover {
+   687→  transform: scale(1.08);
+   688→}
+   689→.icon-btn-micro:active {
+   690→  transform: scale(0.92);
+   691→}
+   692→
+   693→/* ============ PASSWORD DOTS ============ */
+   694→@keyframes dots-appear {
+   695→  from { opacity: 0; letter-spacing: 2px; }
+   696→  to { opacity: 1; letter-spacing: 0; }
+   697→}
+   698→.password-dots-animate {
+   699→  animation: dots-appear 0.3s ease-out;
+   700→}
+   701→
+   702→/* ============ POPOVER/TOOLTIP GLOW ============ */
+   703→.popover-glow {
+   704→  box-shadow: 0 4px 30px oklch(0 0 0 / 30%), 0 0 0 1px oklch(0.696 0.17 162.48 / 10%);
+   705→}
+   706→
+   707→/* ============ PROGRESS BAR ANIMATED FILL ============ */
+   708→@keyframes progress-fill {
+   709→  from { transform: scaleX(0); }
+   710→  to { transform: scaleX(1); }
+   711→}
+   712→.progress-animated > div {
+   713→  transform-origin: left;
+   714→  animation: progress-fill 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+   715→}
+   716→
+   717→/* ============ BADGE PULSE ============ */
+   718→@keyframes badge-pulse {
+   719→  0%, 100% { opacity: 1; }
+   720→  50% { opacity: 0.6; }
+   721→}
+   722→.badge-pulse {
+   723→  animation: badge-pulse 2s ease-in-out infinite;
+   724→}
+   725→
+   726→/* ============ GRADIENT DIVIDER ============ */
+   727→.divider-gradient {
+   728→  height: 1px;
+   729→  background: linear-gradient(90deg, transparent, oklch(0.696 0.17 162.48 / 20%), oklch(0.65 0.15 175 / 15%), oklch(0.696 0.17 162.48 / 20%), transparent);
+   730→  border: none;
+   731→}
+   732→
+   733→/* ============ INPUT UNDERLINE GLOW ============ */
+   734→.input-glow:focus {
+   735→  border-bottom: 2px solid oklch(0.696 0.17 162.48 / 50%);
+   736→}
+   737→
+   738→/* ============ CARD GRID ENTRANCE ============ */
+   739→@keyframes card-entrance {
+   740→  from {
+   741→    opacity: 0;
+   742→    transform: translateY(16px) scale(0.96);
+   743→  }
+   744→  to {
+   745→    opacity: 1;
+   746→    transform: translateY(0) scale(1);
+   747→  }
+   748→}
+   749→.card-entrance {
+   750→  animation: card-entrance 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+   751→}
+   752→
+   753→/* ============ SHEET CONTENT ENTRANCE ============ */
+   754→@keyframes sheet-content-in {
+   755→  from {
+   756→    opacity: 0;
+   757→    transform: translateX(12px);
+   758→  }
+   759→  to {
+   760→    opacity: 1;
+   761→    transform: translateX(0);
+   762→  }
+   763→}
+   764→.sheet-content-animate > * {
+   765→  animation: sheet-content-in 0.3s ease-out both;
+   766→}
+   767→.sheet-content-animate > *:nth-child(1) { animation-delay: 0.05s; }
+   768→.sheet-content-animate > *:nth-child(2) { animation-delay: 0.1s; }
+   769→.sheet-content-animate > *:nth-child(3) { animation-delay: 0.15s; }
+   770→.sheet-content-animate > *:nth-child(4) { animation-delay: 0.2s; }
+   771→.sheet-content-animate > *:nth-child(5) { animation-delay: 0.25s; }
+   772→.sheet-content-animate > *:nth-child(n+6) { animation-delay: 0.3s; }
+   773→
+   774→/* ============ STAR FAVORITE ANIMATION ============ */
+   775→@keyframes star-pop {
+   776→  0% { transform: scale(1); }
+   777→  50% { transform: scale(1.3); }
+   778→  100% { transform: scale(1); }
+   779→}
+   780→.star-pop {
+   781→  animation: star-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+   782→}
+   783→
+   784→/* ============ SKELETON WAVE ============ */
+   785→@keyframes skeleton-wave {
+   786→  0% { background-position: -400px 0; }
+   787→  100% { background-position: calc(400px + 100%) 0; }
+   788→}
+   789→.skeleton-wave {
+   790→  background: linear-gradient(90deg, oklch(0.22 0.012 155 / 40%) 0px, oklch(0.22 0.012 155 / 60%) 40px, oklch(0.22 0.012 155 / 40%) 80px);
+   791→  background-size: 400px 100%;
+   792→  animation: skeleton-wave 1.5s ease-in-out infinite;
+   793→  border-radius: 6px;
+   794→}
+   795→
+   796→/* ============ HOVER UNDERLINE ============ */
+   797→.hover-underline {
+   798→  position: relative;
+   799→}
+   800→.hover-underline::after {
+   801→  content: '';
+   802→  position: absolute;
+   803→  bottom: -1px;
+   804→  left: 0;
+   805→  width: 0;
+   806→  height: 1px;
+   807→  background: oklch(0.696 0.17 162.48 / 60%);
+   808→  transition: width 0.2s ease;
+   809→}
+   810→.hover-underline:hover::after {
+   811→  width: 100%;
+   812→}
+   813→
+   814→/* ============ ERROR SHAKE ============ */
+   815→@keyframes error-shake {
+   816→  0%, 100% { transform: translateX(0); }
+   817→  25% { transform: translateX(-4px); }
+   818→  75% { transform: translateX(4px); }
+   819→}
+   820→.error-shake {
+   821→  animation: error-shake 0.4s ease-in-out;
+   822→}
+   823→
+   824→/* ============ NUMBER FLASH ============ */
+   825→@keyframes number-flash {
+   826→  0% { color: oklch(0.696 0.17 162.48); text-shadow: 0 0 8px oklch(0.696 0.17 162.48 / 40%); }
+   827→  100% { color: inherit; text-shadow: none; }
+   828→}
+   829→.number-flash {
+   830→  animation: number-flash 0.6s ease-out;
+   831→}
+   832→
+   833→/* ============ SLIDING TAB INDICATOR ============ */
+   834→.tab-indicator {
+   835→  position: relative;
+   836→}
+   837→.tab-indicator::after {
+   838→  content: '';
+   839→  position: absolute;
+   840→  bottom: -1px;
+   841→  left: 0;
+   842→  right: 0;
+   843→  height: 2px;
+   844→  background: oklch(0.696 0.17 162.48);
+   845→  border-radius: 1px 1px 0 0;
+   846→  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+   847→}
+   848→
+   849→/* ============ REQUIREMENT CHECKLIST ============ */
+   850→@keyframes check-appear {
+   851→  from { opacity: 0; transform: translateX(-8px); }
+   852→  to { opacity: 1; transform: translateX(0); }
+   853→}
+   854→.req-check-item {
+   855→  animation: check-appear 0.2s ease-out both;
+   856→}
+   857→.req-check-item:nth-child(1) { animation-delay: 0.02s; }
+   858→.req-check-item:nth-child(2) { animation-delay: 0.06s; }
+   859→.req-check-item:nth-child(3) { animation-delay: 0.10s; }
+   860→.req-check-item:nth-child(4) { animation-delay: 0.14s; }
+   861→
+   862→/* ============ BREATHING GLOW ============ */
+   863→@keyframes breathe-glow {
+   864→  0%, 100% { box-shadow: 0 0 20px oklch(0.696 0.17 162.48 / 10%), 0 0 60px oklch(0.696 0.17 162.48 / 5%); }
+   865→  50% { box-shadow: 0 0 30px oklch(0.696 0.17 162.48 / 20%), 0 0 80px oklch(0.696 0.17 162.48 / 10%); }
+   866→}
+   867→.breathe-glow {
+   868→  animation: breathe-glow 4s ease-in-out infinite;
+   869→}
+   870→
+   871→/* ============ INPUT GROUP STYLES ============ */
+   872→.input-group {
+   873→  position: relative;
+   874→}
+   875→.input-group input {
+   876→  padding-right: 2.5rem;
+   877→}
+   878→.input-group .toggle-btn {
+   879→  position: absolute;
+   880→  right: 4px;
+   881→  top: 50%;
+   882→  transform: translateY(-50%);
+   883→  transition: opacity 0.2s ease;
+   884→  opacity: 0.5;
+   885→}
+   886→.input-group .toggle-btn:hover {
+   887→  opacity: 1;
+   888→}
+   889→
+   890→/* ============ TAG CHIP ============ */
+   891→.tag-chip {
+   892→  display: inline-flex;
+   893→  align-items: center;
+   894→  gap: 4px;
+   895→  padding: 2px 8px;
+   896→  border-radius: 9999px;
+   897→  font-size: 10px;
+   898→  font-weight: 500;
+   899→  background: oklch(0.696 0.17 162.48 / 10%);
+   900→  color: oklch(0.696 0.17 162.48);
+   901→  border: 1px solid oklch(0.696 0.17 162.48 / 15%);
+   902→  transition: all 0.15s ease;
+   903→  white-space: nowrap;
+   904→}
+   905→.tag-chip:hover {
+   906→  background: oklch(0.696 0.17 162.48 / 18%);
+   907→  border-color: oklch(0.696 0.17 162.48 / 25%);
+   908→}
+   909→
+   910→/* ============ STRENGTH BAR ============ */
+   911→.strength-bar {
+   912→  height: 6px;
+   913→  border-radius: 3px;
+   914→  background: oklch(0.22 0.012 155 / 50%);
+   915→  overflow: hidden;
+   916→  position: relative;
+   917→}
+   918→.strength-bar-fill {
+   919→  height: 100%;
+   920→  border-radius: 3px;
+   921→  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s ease;
+   922→}
+   923→
+   924→/* ============ FADE IN UP STAGGER ============ */
+   925→@keyframes fade-in-up {
+   926→  from { opacity: 0; transform: translateY(8px); }
+   927→  to { opacity: 1; transform: translateY(0); }
+   928→}
+   929→.fade-in-up {
+   930→  animation: fade-in-up 0.4s ease-out both;
+   931→}
+   932→
+   933→/* ============ SUBTLE BORDER GLOW ============ */
+   934→.border-glow-subtle {
+   935→  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+   936→}
+   937→.border-glow-subtle:hover {
+   938→  border-color: oklch(0.696 0.17 162.48 / 25%);
+   939→  box-shadow: 0 0 0 1px oklch(0.696 0.17 162.48 / 8%);
+   940→}
+   941→
+   942→/* ============ TEXT GLOW ============ */
+   943→.text-glow-emerald {
+   944→  text-shadow: 0 0 12px oklch(0.696 0.17 162.48 / 30%);
+   945→}
+   946→
+   947→/* ============ LOADING SKELETON CARD ============ */
+   948→@keyframes skeleton-pulse {
+   949→  0%, 100% { opacity: 0.4; }
+   950→  50% { opacity: 0.7; }
+   951→}
+   952→.skeleton-card {
+   953→  background: oklch(0.22 0.012 155 / 30%);
+   954→  border-radius: 12px;
+   955→  animation: skeleton-pulse 1.5s ease-in-out infinite;
+   956→}
+   957→
+   958→/* ============ ICON SPIN ============ */
+   959→@keyframes icon-spin {
+   960→  from { transform: rotate(0deg); }
+   961→  to { transform: rotate(360deg); }
+   962→}
+   963→.icon-spin {
+   964→  animation: icon-spin 1s linear infinite;
+   965→}
+   966→
+   967→/* ============ TOOLTIP ARROW ============ */
+   968→.tooltip-arrow::before {
+   969→  content: '';
+   970→  position: absolute;
+   971→  bottom: -4px;
+   972→  left: 50%;
+   973→  transform: translateX(-50%) rotate(45deg);
+   974→  width: 8px;
+   975→  height: 8px;
+   976→  background: oklch(0.17 0.008 155);
+   977→  border-right: 1px solid oklch(0.696 0.17 162.48 / 15%);
+   978→  border-bottom: 1px solid oklch(0.696 0.17 162.48 / 15%);
+   979→}
+   980→
+   981→/* ============ PLATFORM ICON COLOR VARIANTS ============ */
+   982→.platform-icon-dev { color: oklch(0.75 0.15 160); }
+   983→.platform-icon-social { color: oklch(0.7 0.18 200); }
+   984→.platform-icon-finance { color: oklch(0.75 0.15 85); }
+   985→.platform-icon-shopping { color: oklch(0.7 0.18 310); }
+   986→.platform-icon-entertainment { color: oklch(0.75 0.18 330); }
+   987→.platform-icon-work { color: oklch(0.65 0.15 250); }
+   988→.platform-icon-gaming { color: oklch(0.7 0.2 25); }
+   989→.platform-icon-cloud { color: oklch(0.7 0.15 240); }
+   990→
+   991→/* ============ STRENGTH DOT ============ */
+   992→.strength-dot {
+   993→  width: 6px;
+   994→  height: 6px;
+   995→  border-radius: 50%;
+   996→  display: inline-block;
+   997→  flex-shrink: 0;
+   998→}
+   999→.strength-dot-strong { background: oklch(0.7 0.15 162); box-shadow: 0 0 4px oklch(0.7 0.15 162 / 40%); }
+  1000→.strength-dot-moderate { background: oklch(0.8 0.15 85); box-shadow: 0 0 4px oklch(0.8 0.15 85 / 40%); }
+  1001→.strength-dot-weak { background: oklch(0.7 0.2 25); box-shadow: 0 0 4px oklch(0.7 0.2 25 / 40%); }
+  1002→
+  1003→/* ============ ROW HOVER ACCENT ============ */
+  1004→.row-hover-accent {
+  1005→  transition: border-left-color 0.2s ease, background-color 0.2s ease;
+  1006→  border-left: 2px solid transparent;
+  1007→}
+  1008→.row-hover-accent:hover {
+  1009→  border-left-color: oklch(0.696 0.17 162.48 / 30%);
+  1010→  background-color: oklch(0.696 0.17 162.48 / 3%);
+  1011→}
+  1012→
+  1013→/* ============ NOTES EXPANDED ============ */
+  1014→.notes-expanded {
+  1015→  max-height: 120px;
+  1016→  overflow-y: auto;
+  1017→  border-left: 2px solid oklch(0.696 0.17 162.48 / 20%);
+  1018→  padding-left: 8px;
+  1019→}
+  1020→
+  1021→/* ============ FOOTER GRADIENT BORDER ============ */
+  1022→.footer-gradient-border {
+  1023→  border-top: 1px solid transparent;
+  1024→  background: linear-gradient(90deg, transparent, oklch(0.696 0.17 162.48 / 15%), oklch(0.65 0.15 175 / 10%), oklch(0.696 0.17 162.48 / 15%), transparent) top / 100% 1px no-repeat,
+  1025→              oklch(0.12 0.005 155 / 60%);
+  1026→  backdrop-filter: blur(16px) saturate(1.5);
+  1027→  -webkit-backdrop-filter: blur(16px) saturate(1.5);
+  1028→}
+  1029→
+  1030→/* ============ SESSION DOT ============ */
+  1031→@keyframes session-pulse {
+  1032→  0%, 100% { opacity: 1; }
+  1033→  50% { opacity: 0.4; }
+  1034→}
+  1035→.session-dot {
+  1036→  width: 6px;
+  1037→  height: 6px;
+  1038→  border-radius: 50%;
+  1039→  background: oklch(0.7 0.15 162);
+  1040→  animation: session-pulse 2s ease-in-out infinite;
+  1041→}
+  1042→
+  1043→/* ============ CARD CONTENT REVEAL ============ */
+  1044→@keyframes content-reveal {
+  1045→  from { max-height: 0; opacity: 0; }
+  1046→  to { max-height: 200px; opacity: 1; }
+  1047→}
+  1048→.content-reveal {
+  1049→  animation: content-reveal 0.3s ease-out both;
+  1050→  overflow: hidden;
+  1051→}
+  1052→
+  1053→/* ============ MICRO SHINE ON HOVER ============ */
+  1054→@keyframes micro-shine {
+  1055→  0% { left: -100%; }
+  1056→  100% { left: 200%; }
+  1057→}
+  1058→.micro-shine {
+  1059→  position: relative;
+  1060→  overflow: hidden;
+  1061→}
+  1062→.micro-shine::after {
+  1063→  content: '';
+  1064→  position: absolute;
+  1065→  top: 0;
+  1066→  left: -100%;
+  1067→  width: 50%;
+  1068→  height: 100%;
+  1069→  background: linear-gradient(90deg, transparent, oklch(1 0 0 / 3%), transparent);
+  1070→  transition: none;
+  1071→  pointer-events: none;
+  1072→}
+  1073→.micro-shine:hover::after {
+  1074→  animation: micro-shine 0.6s ease-out;
+  1075→}

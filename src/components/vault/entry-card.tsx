@@ -115,7 +115,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
     <Button
       variant="ghost"
       size="icon"
-      className="h-7 w-7 shrink-0 hover:bg-primary/10 icon-btn-micro"
+      className="h-8 w-8 sm:h-7 sm:w-7 shrink-0 hover:bg-primary/10 icon-btn-micro touch-target"
       onClick={copy}
       title={`Copy ${label.toLowerCase()}`}
     >
@@ -165,7 +165,7 @@ export function EntryCard({ entry, onEdit, onDuplicate, onDelete, onView }: Entr
             isSelected && "card-selected"
           )}
         >
-          <CardContent className="p-4 space-y-3" onClick={handleCardClick}>
+          <CardContent className="p-3 sm:p-4 space-y-3" onClick={handleCardClick}>
             {/* Selection checkbox */}
             <button
               className={cn(
@@ -216,7 +216,7 @@ export function EntryCard({ entry, onEdit, onDuplicate, onDelete, onView }: Entr
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 hover:bg-primary/10 icon-btn-micro"
+                  className="h-8 w-8 sm:h-7 sm:w-7 hover:bg-primary/10 icon-btn-micro touch-target"
                   onClick={(e) => { e.stopPropagation(); toggleFavorite(entry.id); toast.success(isFav ? 'Unstarred' : 'Starred'); }}
                   title={isFav ? 'Remove from favorites' : 'Add to favorites'}
                 >
@@ -225,7 +225,7 @@ export function EntryCard({ entry, onEdit, onDuplicate, onDelete, onView }: Entr
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 hover:bg-primary/10 icon-btn-micro"
+                  className="h-8 w-8 sm:h-7 sm:w-7 hover:bg-primary/10 icon-btn-micro touch-target"
                   onClick={(e) => { e.stopPropagation(); onEdit(entry); }}
                   title="Edit"
                 >
@@ -236,7 +236,7 @@ export function EntryCard({ entry, onEdit, onDuplicate, onDelete, onView }: Entr
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 text-destructive/70 hover:text-destructive hover:bg-destructive/10 icon-btn-micro"
+                      className="h-8 w-8 sm:h-7 sm:w-7 text-destructive/70 hover:text-destructive hover:bg-destructive/10 icon-btn-micro touch-target"
                       title="Delete"
                       onClick={(e) => e.stopPropagation()}
                     >
@@ -354,7 +354,7 @@ export function EntryCard({ entry, onEdit, onDuplicate, onDelete, onView }: Entr
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 shrink-0 hover:bg-primary/10 icon-btn-micro"
+                    className="h-8 w-8 sm:h-7 sm:w-7 shrink-0 hover:bg-primary/10 icon-btn-micro touch-target"
                     onClick={(e) => { e.stopPropagation(); setShowPassword(!showPassword); }}
                     title={showPassword ? 'Hide' : 'Reveal'}
                   >

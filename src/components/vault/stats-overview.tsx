@@ -109,7 +109,7 @@ export function StatsOverview() {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 animate-fade-in">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 animate-fade-in">
         <StatCard
           icon={<KeyRound className="h-4 w-4 text-primary" />}
           label="Total Entries"
@@ -214,7 +214,7 @@ function StatCard({
   const card = (
     <div
       className={cn(
-        'rounded-xl border border-border/40 bg-card/50 p-3 space-y-1.5 transition-all duration-300 border-l-[3px] stat-card-hover',
+        'rounded-xl border border-border/40 bg-card/50 p-2.5 sm:p-3 space-y-1.5 transition-all duration-300 border-l-[3px] stat-card-hover',
         accent ? 'border-l-primary/50 hover:bg-primary/5 border-primary/20 bg-primary/5' : '',
         accentColor || '',
         highlight && 'animate-pulse-glow'
@@ -222,9 +222,9 @@ function StatCard({
     >
       <div className="flex items-center gap-2 text-muted-foreground/60">
         {icon}
-        <span className={cn('text-[10px] uppercase tracking-wider', small ? 'text-[9px]' : '')}>{label}</span>
+        <span className={cn('text-[10px] sm:text-xs uppercase tracking-wider', small ? 'text-[9px]' : '')}>{label}</span>
       </div>
-      <p className={cn('font-semibold leading-tight tabular-nums', small ? 'text-sm' : 'text-xl')}>{value}</p>
+      <p className={cn('font-semibold leading-tight tabular-nums text-lg sm:text-xl', small ? 'text-sm' : '')}>{value}</p>
     </div>
   );
 

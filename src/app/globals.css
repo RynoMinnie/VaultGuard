@@ -188,15 +188,28 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: oklch(0.45 0.05 155);
 }
+:root .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: oklch(0.75 0.02 155);
+}
+:root .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.65 0.03 155);
+}
 
 /* ============ GLOW EFFECTS ============ */
 .emerald-glow {
   box-shadow: 0 0 20px oklch(0.696 0.17 162.48 / 15%),
     0 0 60px oklch(0.696 0.17 162.48 / 5%);
 }
+:root .emerald-glow {
+  box-shadow: 0 0 20px oklch(0.696 0.17 162.48 / 8%),
+    0 0 60px oklch(0.696 0.17 162.48 / 3%);
+}
 
 .emerald-glow-sm {
   box-shadow: 0 0 10px oklch(0.696 0.17 162.48 / 10%);
+}
+:root .emerald-glow-sm {
+  box-shadow: 0 0 10px oklch(0.696 0.17 162.48 / 6%);
 }
 
 .emerald-glow-animate {
@@ -236,12 +249,24 @@
   );
   background-size: 30px 30px;
 }
+:root .vault-bg {
+  background-image: radial-gradient(
+    oklch(0.696 0.17 162.48 / 6%) 1px,
+    transparent 1px
+  );
+}
 
 .vault-bg-mesh {
   background-image:
     radial-gradient(at 20% 20%, oklch(0.696 0.17 162.48 / 6%) 0px, transparent 50%),
     radial-gradient(at 80% 80%, oklch(0.65 0.15 175 / 4%) 0px, transparent 50%),
     radial-gradient(at 50% 50%, oklch(0.696 0.17 162.48 / 2%) 0px, transparent 70%);
+}
+:root .vault-bg-mesh {
+  background-image:
+    radial-gradient(at 20% 20%, oklch(0.696 0.17 162.48 / 10%) 0px, transparent 50%),
+    radial-gradient(at 80% 80%, oklch(0.65 0.15 175 / 8%) 0px, transparent 50%),
+    radial-gradient(at 50% 50%, oklch(0.696 0.17 162.48 / 4%) 0px, transparent 70%);
 }
 
 /* ============ SHIMMER LOADING ============ */
@@ -273,11 +298,17 @@
   backdrop-filter: blur(16px) saturate(1.5);
   -webkit-backdrop-filter: blur(16px) saturate(1.5);
 }
+:root .glass {
+  background: oklch(1 0 0 / 60%);
+}
 
 .glass-strong {
   background: oklch(0.17 0.008 155 / 80%);
   backdrop-filter: blur(24px) saturate(1.8);
   -webkit-backdrop-filter: blur(24px) saturate(1.8);
+}
+:root .glass-strong {
+  background: oklch(1 0 0 / 80%);
 }
 
 /* ============ INPUT FOCUS GLOW ============ */
@@ -1026,6 +1057,14 @@ select:focus-visible,
   backdrop-filter: blur(16px) saturate(1.5);
   -webkit-backdrop-filter: blur(16px) saturate(1.5);
 }
+:root .footer-gradient-border {
+  background: linear-gradient(90deg, transparent, oklch(0.696 0.17 162.48 / 15%), oklch(0.65 0.15 175 / 10%), oklch(0.696 0.17 162.48 / 15%), transparent) top / 100% 1px no-repeat,
+              oklch(1 0 0 / 60%);
+}
+
+:root .noise-bg::after {
+  opacity: 0.015;
+}
 
 /* ============ SESSION DOT ============ */
 @keyframes session-pulse {
@@ -1072,4 +1111,12 @@ select:focus-visible,
 }
 .micro-shine:hover::after {
   animation: micro-shine 0.6s ease-out;
+}
+
+/* ============ MOBILE TOUCH TARGETS ============ */
+@media (max-width: 639px) {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
 }

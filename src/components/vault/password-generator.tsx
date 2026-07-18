@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Copy, Check, RefreshCw, Shuffle, Zap, KeyRound, Hash, Wand2 } from 'lucide-react';
 import { generatePassword } from '@/lib/crypto';
-import { toast } from 'sonner';
+import { copyWithAutoClear } from '@/hooks/use-clipboard-auto-clear';
 import { cn } from '@/lib/utils';
 
 interface PasswordGeneratorProps {
@@ -79,14 +79,9 @@ export function PasswordGenerator({ value, onChange }: PasswordGeneratorProps) {
 
   const copyToClipboard = async () => {
     if (!value) return;
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopied(true);
-      toast.success('Password copied to clipboard');
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      toast.error('Failed to copy to clipboard');
-    }
+    setCopied(true);
+    await copyWithAutoClear(value, 'Password');
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const isCustom = !activePreset;

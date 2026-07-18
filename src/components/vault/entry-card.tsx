@@ -49,6 +49,7 @@ import { CategoryTag } from './category-tag';
 import { cn } from '@/lib/utils';
 import type { DecryptedEntry } from '@/store';
 import { useVaultStore } from '@/store';
+import { copyWithAutoClear } from '@/hooks/use-clipboard-auto-clear';
 import { toast } from 'sonner';
 import { formatDistanceToNow, format } from 'date-fns';
 
@@ -101,14 +102,9 @@ function CopyButton({ text, label }: { text: string; label: string }) {
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      toast.success(`${label} copied`);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      toast.error('Failed to copy');
-    }
+    setCopied(true);
+    await copyWithAutoClear(text, label);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -146,14 +142,9 @@ export function EntryCard({ entry, onEdit, onDuplicate, onDelete, onView }: Entr
   const handlePasswordFieldClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowPassword(true);
-    try {
-      await navigator.clipboard.writeText(data.password);
-      setPwCopied(true);
-      toast.success('Password copied to clipboard');
-      setTimeout(() => setPwCopied(false), 2000);
-    } catch {
-      toast.error('Failed to copy');
-    }
+    setPwCopied(true);
+    await copyWithAutoClear(data.password, 'Password');
+    setTimeout(() => setPwCopied(false), 2000);
   };
 
   return (

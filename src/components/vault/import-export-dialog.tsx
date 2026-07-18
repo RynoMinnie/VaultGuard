@@ -68,6 +68,7 @@ export function ImportExportDialog({ mode, open, onOpenChange }: ImportExportDia
       URL.revokeObjectURL(url);
 
       toast.success(`Exported ${data.exportData.entryCount} entries as encrypted JSON`);
+      localStorage.setItem('vault_last_export', Date.now().toString());
       onOpenChange(false);
     } catch {
       toast.error('Failed to export vault');
@@ -105,6 +106,7 @@ export function ImportExportDialog({ mode, open, onOpenChange }: ImportExportDia
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     toast.success(`Exported ${entries.length} entries as CSV`);
+    localStorage.setItem('vault_last_export', Date.now().toString());
     onOpenChange(false);
   };
 

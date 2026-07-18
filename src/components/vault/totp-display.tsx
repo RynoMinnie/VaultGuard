@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import * as OTPAuth from 'otpauth';
 import { Button } from '@/components/ui/button';
 import { Copy, Check, RefreshCw, ShieldCheck } from 'lucide-react';
-import { toast } from 'sonner';
+import { copyWithAutoClear } from '@/hooks/use-clipboard-auto-clear';
 import { cn } from '@/lib/utils';
 
 interface TOTPDisplayProps {
@@ -67,14 +67,9 @@ export function TOTPDisplay({ secret, label, issuer }: TOTPDisplayProps) {
 
   const copyCode = async () => {
     if (!code) return;
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopied(true);
-      toast.success('TOTP code copied');
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      toast.error('Failed to copy');
-    }
+    setCopied(true);
+    await copyWithAutoClear(code, 'TOTP code');
+    setTimeout(() => setCopied(false), 2000);
   };
 
   if (error) {
@@ -184,13 +179,8 @@ export function TOTPDisplay({ secret, label, issuer }: TOTPDisplayProps) {
             variant="ghost"
             size="sm"
             className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-            onClick={async () => {
-              try {
-                await navigator.clipboard.writeText(secret);
-                toast.success('Secret copied');
-              } catch {
-                toast.error('Failed to copy');
-              }
+            onClick={() => {
+              copyWithAutoClear(secret, 'TOTP secret');
             }}
           >
             <Copy className="h-3.5 w-3.5" />

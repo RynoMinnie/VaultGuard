@@ -43,6 +43,7 @@ import { TOTPDisplay } from './totp-display';
 import { PasswordStrengthMeter } from './password-strength-meter';
 import { useVaultStore, type DecryptedEntry } from '@/store';
 import type { PasswordHistoryEntry } from '@/lib/crypto';
+import { copyWithAutoClear } from '@/hooks/use-clipboard-auto-clear';
 import { toast } from 'sonner';
 import { format, formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -59,14 +60,9 @@ interface EntryDetailSheetProps {
 function CopyBtn({ text, label }: { text: string; label: string }) {
   const [copied, setCopied] = useState(false);
   const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      toast.success(`${label} copied`);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      toast.error('Failed to copy');
-    }
+    setCopied(true);
+    await copyWithAutoClear(text, label);
+    setTimeout(() => setCopied(false), 2000);
   };
   return (
     <Button
@@ -302,10 +298,7 @@ export function EntryDetailSheet({ entry, open, onOpenChange, onEdit, onDuplicat
                   data.totpSecret ? `TOTP Secret: ${data.totpSecret}` : '',
                   data.other ? `Notes: ${data.other}` : '',
                 ].filter(Boolean).join('\n');
-                navigator.clipboard.writeText(text).then(
-                  () => toast.success('All credentials copied'),
-                  () => toast.error('Failed to copy')
-                );
+                copyWithAutoClear(text, 'All credentials');
               }}
             >
               <ClipboardCopy className="h-4 w-4" />

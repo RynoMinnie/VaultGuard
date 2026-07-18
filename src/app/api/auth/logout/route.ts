@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { deleteSession } from '@/lib/auth';
+import { setSecurityHeaders } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
   try {
@@ -7,9 +8,9 @@ export async function POST(request: NextRequest) {
     if (token) {
       await deleteSession(token);
     }
-    return NextResponse.json({ success: true });
+    return setSecurityHeaders(NextResponse.json({ success: true }));
   } catch (error) {
     console.error('Logout error:', error);
-    return NextResponse.json({ success: true });
+    return setSecurityHeaders(NextResponse.json({ success: true }));
   }
 }

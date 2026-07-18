@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
-const APP_VERSION = 'v0.7.0';
+const APP_VERSION = 'v1.0.0';
 
 export async function GET() {
   try {
@@ -14,7 +14,7 @@ export async function GET() {
       await db.appVersion.create({
         data: {
           version: APP_VERSION,
-          description: 'Initial release - Core vault functionality with zero-knowledge encryption',
+          description: 'v1.0.0 - Production release with full security hardening',
         },
       });
     }

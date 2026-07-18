@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       exportData: {
-        version: 'v0.7.0',
+        version: 'v1.0.0',
         exportedAt: new Date().toISOString(),
         entryCount: entries.length,
         entries,

@@ -1,0 +1,929 @@
+     1→'use client';
+     2→
+     3→import { useState, useEffect, useCallback, useRef } from 'react';
+     4→import { useAuthStore, useVaultStore, useTimeoutStore, setTimeoutLogoutCallback, type DecryptedEntry } from '@/store';
+     5→import {
+     6→  hashPassword,
+     7→  generateSalt,
+     8→  deriveEncryptionKey,
+     9→  decryptEntry,
+    10→  encryptEntry,
+    11→} from '@/lib/crypto';
+    12→import type { VaultEntryData } from '@/lib/crypto';
+    13→import { VaultHeader } from '@/components/vault/vault-header';
+    14→import { EntryCard } from '@/components/vault/entry-card';
+    15→import { EntryRow } from '@/components/vault/entry-row';
+    16→import { EntryFormDialog } from '@/components/vault/entry-form-dialog';
+    17→import { PasswordGenerator } from '@/components/vault/password-generator';
+    18→import { PasswordStrengthMeter } from '@/components/vault/password-strength-meter';
+    19→import { InactivityWarning } from '@/components/vault/inactivity-warning';
+    20→import { ImportExportDialog } from '@/components/vault/import-export-dialog';
+    21→import { ChangePasswordDialog } from '@/components/vault/change-password-dialog';
+    22→import { CategoryTag, type CategoryId, CATEGORIES } from '@/components/vault/category-tag';
+    23→import { EntryDetailSheet } from '@/components/vault/entry-detail-sheet';
+    24→import { StatsOverview } from '@/components/vault/stats-overview';
+    25→import { ThemeToggle } from '@/components/vault/theme-toggle';
+    26→import { Button } from '@/components/ui/button';
+    27→import { Input } from '@/components/ui/input';
+    28→import { Label } from '@/components/ui/label';
+    29→import { Card, CardContent } from '@/components/ui/card';
+    30→import { Skeleton } from '@/components/ui/skeleton';
+    31→import { Separator } from '@/components/ui/separator';
+    32→import { toast } from 'sonner';
+    33→import { formatDistanceToNow } from 'date-fns';
+    34→import {
+    35→  Shield,
+    36→  LogOut,
+    37→  Lock,
+    38→  UserPlus,
+    39→  Eye,
+    40→  EyeOff,
+    41→  Loader2,
+    42→  Vault as VaultIcon,
+    43→  KeyRound,
+    44→  ChevronRight,
+    45→  Clock,
+    46→  Sparkles,
+    47→  Fingerprint,
+    48→  Trash2,
+    49→  Check,
+    50→  CheckSquare,
+    51→  Circle,
+    52→  Square,
+    53→} from 'lucide-react';
+    54→import { cn } from '@/lib/utils';
+    55→
+    56→const APP_VERSION = 'v0.7.0';
+    57→
+    58→// =============== AUTH SCREEN ===============
+    59→function AuthScreen() {
+    60→  const [isLogin, setIsLogin] = useState(true);
+    61→  const [username, setUsername] = useState('');
+    62→  const [password, setPassword] = useState('');
+    63→  const [showPassword, setShowPassword] = useState(false);
+    64→  const [loading, setLoading] = useState(false);
+    65→  const [regPassword, setRegPassword] = useState('');
+    66→  const [regConfirm, setRegConfirm] = useState('');
+    67→  const [showRegPassword, setShowRegPassword] = useState(false);
+    68→  const [showRegConfirm, setShowRegConfirm] = useState(false);
+    69→  const { login } = useAuthStore();
+    70→  const [authenticating, setAuthenticating] = useState(false);
+    71→
+    72→  const handleLogin = async (e: React.FormEvent) => {
+    73→    e.preventDefault();
+    74→    if (!username.trim() || !password) {
+    75→      toast.error('Please fill in all fields');
+    76→      return;
+    77→    }
+    78→
+    79→    setLoading(true);
+    80→    try {
+    81→      const saltRes = await fetch(`/api/auth/salt?username=${encodeURIComponent(username.trim())}`);
+    82→      if (!saltRes.ok) {
+    83→        throw new Error('Invalid username or password');
+    84→      }
+    85→      const { salt, encryptionSalt } = await saltRes.json();
+    86→
+    87→      const passwordHash = await hashPassword(password, salt);
+    88→
+    89→      const res = await fetch('/api/auth/login', {
+    90→        method: 'POST',
+    91→        headers: { 'Content-Type': 'application/json' },
+    92→        body: JSON.stringify({ username: username.trim(), passwordHash }),
+    93→      });
+    94→
+    95→      if (!res.ok) {
+    96→        const err = await res.json();
+    97→        throw new Error(err.error || 'Login failed');
+    98→      }
+    99→
+   100→      const { user, token } = await res.json();
+   101→      const key = await deriveEncryptionKey(password, encryptionSalt);
+   102→
+   103→      setAuthenticating(true);
+   104→      await new Promise((r) => setTimeout(r, 300));
+   105→      login(token, user.id, user.username, key, encryptionSalt);
+   106→      toast.success('Welcome back!');
+   107→    } catch (err) {
+   108→      toast.error(err instanceof Error ? err.message : 'Login failed');
+   109→      setAuthenticating(false);
+   110→      setLoading(false);
+   111→    }
+   112→  };
+   113→
+   114→  const handleRegister = async (e: React.FormEvent) => {
+   115→    e.preventDefault();
+   116→    if (!username.trim() || !regPassword || !regConfirm) {
+   117→      toast.error('Please fill in all fields');
+   118→      return;
+   119→    }
+   120→    if (regPassword.length < 8) {
+   121→      toast.error('Master password must be at least 8 characters');
+   122→      return;
+   123→    }
+   124→    if (regPassword !== regConfirm) {
+   125→      toast.error('Passwords do not match');
+   126→      return;
+   127→    }
+   128→
+   129→    setLoading(true);
+   130→    try {
+   131→      const salt = generateSalt();
+   132→      const encryptionSalt = generateSalt();
+   133→      const passwordHash = await hashPassword(regPassword, salt);
+   134→
+   135→      const res = await fetch('/api/auth/register', {
+   136→        method: 'POST',
+   137→        headers: { 'Content-Type': 'application/json' },
+   138→        body: JSON.stringify({
+   139→          username: username.trim(),
+   140→          passwordHash,
+   141→          salt,
+   142→          encryptionSalt,
+   143→        }),
+   144→      });
+   145→
+   146→      if (!res.ok) {
+   147→        const err = await res.json();
+   148→        throw new Error(err.error || 'Registration failed');
+   149→      }
+   150→
+   151→      const { user, token } = await res.json();
+   152→      const key = await deriveEncryptionKey(regPassword, encryptionSalt);
+   153→
+   154→      setAuthenticating(true);
+   155→      await new Promise((r) => setTimeout(r, 300));
+   156→      login(token, user.id, user.username, key, encryptionSalt);
+   157→      toast.success('Account created! Your vault is ready.');
+   158→    } catch (err) {
+   159→      toast.error(err instanceof Error ? err.message : 'Registration failed');
+   160→      setAuthenticating(false);
+   161→      setLoading(false);
+   162→    }
+   163→  };
+   164→
+   165→  return (
+   166→    <div className="min-h-screen flex items-center justify-center p-4 vault-bg vault-bg-mesh">
+   167→      {/* Animated background orbs */}
+   168→      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+   169→        <div className="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-primary/5 rounded-full blur-3xl float-animate" />
+   170→        <div className="absolute -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-teal/5 rounded-full blur-3xl float-animate" style={{ animationDelay: '-3s' }} />
+   171→      Trash2,
+   172→  </div>
+   173→
+   174→      <Card className="w-full max-w-md border-border/40 bg-card/70 backdrop-blur-2xl gradient-border noise-bg relative z-10 animate-fade-in">
+   175→        <div className="absolute top-4 right-4 z-20">
+   176→          <ThemeToggle />
+   177→        </div>
+   178→        <CardContent className="p-6 sm:p-8">
+   179→          {/* Logo with animated lock */}
+   180→          <div className="text-center mb-8">
+   181→            <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-primary/20 to-teal/10 mb-5 breathe-glow relative overflow-hidden">
+   182→              <div className="absolute inset-0 shimmer opacity-30" />
+   183→              <VaultIcon className="h-9 w-9 text-primary relative z-10 lock-icon-animate" />
+   184→            </div>
+   185→            <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-foreground via-foreground to-foreground/70 bg-clip-text text-transparent">
+   186→              Password Vault
+   187→            </h1>
+   188→            <p className="text-sm text-muted-foreground mt-1.5 flex items-center justify-center gap-1.5">
+   189→              <Fingerprint className="h-3.5 w-3.5 text-primary/60" />
+   190→              Zero-knowledge encrypted password manager
+   191→            </p>
+   192→            <p className="text-[10px] text-muted-foreground/40 mt-1 font-mono">{APP_VERSION}</p>
+   193→          </div>
+   194→
+   195→          {/* Tab switcher */}
+   196→          <div className="flex mb-6 bg-muted/40 rounded-xl p-1 border border-border/30">
+   197→            <button
+   198→              onClick={() => setIsLogin(true)}
+   199→              className={cn(
+   200→                'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+   201→                isLogin
+   202→                  ? 'bg-background text-foreground shadow-sm shadow-black/5 tab-indicator'
+   203→                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+   204→              )}
+   205→            >
+   206→              <KeyRound className="h-4 w-4" />
+   207→              Sign In
+   208→            </button>
+   209→            <button
+   210→              onClick={() => setIsLogin(false)}
+   211→              className={cn(
+   212→                'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+   213→                !isLogin
+   214→                  ? 'bg-background text-foreground shadow-sm shadow-black/5 tab-indicator'
+   215→                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+   216→              )}
+   217→            >
+   218→              <UserPlus className="h-4 w-4" />
+   219→              Register
+   220→            </button>
+   221→          </div>
+   222→
+   223→          {isLogin ? (
+   224→            <form onSubmit={handleLogin} className="space-y-4 animate-fade-in">
+   225→              <div className="space-y-2">
+   226→                <Label htmlFor="login-username" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+   227→                  Username
+   228→                </Label>
+   229→                <Input
+   230→                  id="login-username"
+   231→                  value={username}
+   232→                  onChange={(e) => setUsername(e.target.value)}
+   233→                  placeholder="Enter your username"
+   234→                  autoComplete="username"
+   235→                  autoFocus
+   236→                  className="h-11"
+   237→                />
+   238→              </div>
+   239→              <div className="space-y-2">
+   240→                <Label htmlFor="login-password" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+   241→                  Master Password
+   242→                </Label>
+   243→                <div className="input-group relative">
+   244→                  <Input
+   245→                    id="login-password"
+   246→                    type={showPassword ? 'text' : 'password'}
+   247→                    value={password}
+   248→                    onChange={(e) => setPassword(e.target.value)}
+   249→                    placeholder="Enter your master password"
+   250→                    autoComplete="current-password"
+   251→                    className="h-11"
+   252→                  />
+   253→                  <Button
+   254→                    type="button"
+   255→                    variant="ghost"
+   256→                    size="icon"
+   257→                    className="toggle-btn h-10 w-10 hover:bg-transparent"
+   258→                    onClick={() => setShowPassword(!showPassword)}
+   259→                  >
+   260→                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+   261→                  </Button>
+   262→                </div>
+   263→              </div>
+   264→              <Button type="submit" className="w-full h-11 shadow-lg shadow-primary/20" disabled={loading || !username.trim() || !password}>
+   265→                {loading ? (
+   266→                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+   267→                ) : (
+   268→                  <Lock className="h-4 w-4 mr-2" />
+   269→                )}
+   270→                Unlock Vault
+   271→              </Button>
+   272→            </form>
+   273→          ) : (
+   274→            <form onSubmit={handleRegister} className="space-y-4 animate-fade-in">
+   275→              <div className="space-y-2">
+   276→                <Label htmlFor="reg-username" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+   277→                  Username
+   278→                </Label>
+   279→                <Input
+   280→                  id="reg-username"
+   281→                  value={username}
+   282→                  onChange={(e) => setUsername(e.target.value)}
+   283→                  placeholder="Choose a username"
+   284→                  autoComplete="username"
+   285→                  autoFocus
+   286→                  className="h-11"
+   287→                />
+   288→              </div>
+   289→              <div className="space-y-2">
+   290→                <Label htmlFor="reg-password" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+   291→                  Master Password
+   292→                </Label>
+   293→                <div className="input-group relative">
+   294→                  <Input
+   295→                    id="reg-password"
+   296→                    type={showRegPassword ? 'text' : 'password'}
+   297→                    value={regPassword}
+   298→                    onChange={(e) => setRegPassword(e.target.value)}
+   299→                    placeholder="Min. 8 characters"
+   300→                    autoComplete="new-password"
+   301→                    className="h-11"
+   302→                  />
+   303→                  <Button
+   304→                    type="button"
+   305→                    variant="ghost"
+   306→                    size="icon"
+   307→                    className="toggle-btn h-10 w-10 hover:bg-transparent"
+   308→                    onClick={() => setShowRegPassword(!showRegPassword)}
+   309→                  >
+   310→                    {showRegPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+   311→                  </Button>
+   312→                </div>
+   313→                {!isLogin && regPassword.length > 0 && (
+   314→                  <div className="space-y-1.5 mt-2">
+   315→                    {[
+   316→                      { label: 'Minimum 8 characters', met: regPassword.length >= 8 },
+   317→                      { label: 'Contains uppercase', met: /[A-Z]/.test(regPassword) },
+   318→                      { label: 'Contains number', met: /[0-9]/.test(regPassword) },
+   319→                      { label: 'Contains symbol', met: /[^A-Za-z0-9]/.test(regPassword) },
+   320→                    ].map((req) => (
+   321→                      <div key={req.label} className="req-check-item flex items-center gap-2 text-[11px]">
+   322→                        {req.met ? (
+   323→                          <Check className="h-3 w-3 text-emerald-400" />
+   324→                        ) : (
+   325→                          <Circle className="h-3 w-3 text-muted-foreground/30" />
+   326→                        )}
+   327→                        <span className={req.met ? 'text-emerald-400/80' : 'text-muted-foreground/50'}>{req.label}</span>
+   328→                      </div>
+   329→                    ))}
+   330→                  </div>
+   331→                )}
+   332→                <PasswordStrengthMeter password={regPassword} />
+   333→              </div>
+   334→              <div className="space-y-2">
+   335→                <Label htmlFor="reg-confirm" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+   336→                  Confirm Master Password
+   337→                </Label>
+   338→                <div className="input-group relative">
+   339→                  <Input
+   340→                    id="reg-confirm"
+   341→                    type={showRegConfirm ? 'text' : 'password'}
+   342→                    value={regConfirm}
+   343→                    onChange={(e) => setRegConfirm(e.target.value)}
+   344→                    placeholder="Re-enter your master password"
+   345→                    autoComplete="new-password"
+   346→                    className={cn(
+   347→                      'h-11 transition-colors',
+   348→                      regConfirm && regPassword !== regConfirm && 'border-destructive focus-visible:ring-destructive/30'
+   349→                    )}
+   350→                  />
+   351→                  <Button
+   352→                    type="button"
+   353→                    variant="ghost"
+   354→                    size="icon"
+   355→                    className="toggle-btn h-10 w-10 hover:bg-transparent"
+   356→                    onClick={() => setShowRegConfirm(!showRegConfirm)}
+   357→                  >
+   358→                    {showRegConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+   359→                  </Button>
+   360→                </div>
+   361→                {regConfirm && regPassword !== regConfirm && (
+   362→                  <p className="text-xs text-destructive flex items-center gap-1">
+   363→                    <span>Passwords do not match</span>
+   364→                  </p>
+   365→                )}
+   366→              </div>
+   367→              <PasswordGenerator value={regPassword} onChange={setRegPassword} />
+   368→              <Button
+   369→                type="submit"
+   370→                className="w-full h-11 shadow-lg shadow-primary/20"
+   371→                disabled={loading || !username.trim() || !regPassword || !regConfirm}
+   372→              >
+   373→                {loading ? (
+   374→                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+   375→                ) : (
+   376→                  <Shield className="h-4 w-4 mr-2" />
+   377→                )}
+   378→                Create Vault
+   379→              </Button>
+   380→            </form>
+   381→          )}
+   382→
+   383→          {/* Security note */}
+   384→          <div className="mt-6 flex items-start gap-2.5 rounded-xl bg-muted/30 border border-border/30 p-3.5">
+   385→            <Shield className="h-4 w-4 text-primary/70 shrink-0 mt-0.5" />
+   386→            <p className="text-[11px] text-muted-foreground leading-relaxed">
+   387→              Your master password is never sent to the server. All encryption and decryption happens
+   388→              locally in your browser using <span className="text-primary/80 font-medium">AES-256-GCM</span>.
+   389→            </p>
+   390→          </div>
+   391→
+   392→          {/* Authenticating overlay */}
+   393→          {authenticating && (
+   394→            <div className="absolute inset-0 rounded-[inherit] bg-card/90 backdrop-blur-sm flex flex-col items-center justify-center z-20 animate-fade-in">
+   395→              <VaultIcon className="h-10 w-10 text-primary auth-loading-icon" />
+   396→              <p className="text-sm text-muted-foreground mt-3">Unlocking vault...</p>
+   397→            </div>
+   398→          )}
+   399→        </CardContent>
+   400→      </Card>
+   401→      <p className="mt-4 flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground/40">
+   402→        <Lock className="h-3 w-3 shrink-0" />
+   403→        <span>AES-256-GCM encrypted</span>
+   404→      </p>
+   405→    </div>
+   406→  );
+   407→}
+   408→
+   409→// =============== RECENTLY USED SECTION ===============
+   410→function RecentlyUsedSection() {
+   411→  const { getRecentEntries } = useVaultStore();
+   412→  const recent = getRecentEntries();
+   413→
+   414→  if (recent.length === 0) return null;
+   415→
+   416→  return (
+   417→    <div className="mb-6 -mx-3 sm:-mx-4 md:-mx-6">
+   418→      <div className="flex items-center gap-2 mb-3 px-3 sm:px-4 md:px-6">
+   419→        <Clock className="h-4 w-4 text-primary/60" />
+   420→        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Recently Accessed</h2>
+   421→      </div>
+   422→      <div className="flex gap-2 overflow-x-auto scrollbar-none px-3 sm:px-4 md:px-6">
+   423→        {recent.map((entry, i) => {
+   424→          const cat = entry.data.category;
+   425→          const catColor = cat ? CATEGORIES.find(c => c.id === cat)?.color.split(' ')[0] : '';
+   426→          return (
+   427→            <button
+   428→              key={entry.id}
+   429→              className="group flex items-center gap-2.5 rounded-lg bg-muted/30 hover:bg-muted/60 border border-border/30 hover:border-primary/20 px-3 py-2.5 text-left transition-all duration-200 hover:emerald-glow-sm hover:scale-[1.02] animate-slide-up shrink-0 w-36 sm:w-auto"
+   430→              style={{ animationDelay: `${i * 0.05}s`, borderLeftWidth: '3px', borderLeftColor: catColor ? undefined : 'transparent' }}
+   431→            >
+   432→              <div className="h-7 w-7 rounded-md bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+   433→                <Sparkles className="h-3.5 w-3.5 text-primary/70" />
+   434→              </div>
+   435→              <div className="min-w-0 flex-1">
+   436→                <p className="text-xs font-medium truncate">{entry.data.platform}</p>
+   437→                <p className="text-[10px] text-muted-foreground/60 truncate">
+   438→                  {formatDistanceToNow(new Date(entry.data.lastAccessed), { addSuffix: true })}
+   439→                </p>
+   440→              </div>
+   441→            </button>
+   442→          );
+   443→        })}
+   444→      </div>
+   445→      <Separator className="mt-4 opacity-40" />
+   446→    </div>
+   447→  );
+   448→}
+   449→
+   450→// =============== VAULT SCREEN ===============
+   451→function VaultScreen() {
+   452→  const { token, encryptionKey, username, logout } = useAuthStore();
+   453→  const { entries, isLoading, setLoading, setEntries, addEntry, updateEntry, removeEntry, removeEntries, getFilteredAndSorted, viewMode, searchQuery, selectedIds, toggleSelect, toggleSelectAll, clearSelection } =
+   454→    useVaultStore();
+   455→
+   456→  const [formOpen, setFormOpen] = useState(false);
+   457→  const [editingEntry, setEditingEntry] = useState<DecryptedEntry | null>(null);
+   458→  const [exportOpen, setExportOpen] = useState(false);
+   459→  const [importOpen, setImportOpen] = useState(false);
+   460→  const [changePwOpen, setChangePwOpen] = useState(false);
+   461→  const [detailEntry, setDetailEntry] = useState<DecryptedEntry | null>(null);
+   462→  const [detailOpen, setDetailOpen] = useState(false);
+   463→  const [versionInfo, setVersionInfo] = useState<string>(APP_VERSION);
+   464→  const fetchedRef = useRef(false);
+   465→
+   466→  const fetchEntries = useCallback(async () => {
+   467→    if (!token || !encryptionKey || fetchedRef.current) return;
+   468→    fetchedRef.current = true;
+   469→    setLoading(true);
+   470→    try {
+   471→      const res = await fetch('/api/vault/entries', {
+   472→        headers: { Authorization: `Bearer ${token}` },
+   473→      });
+   474→      if (!res.ok) throw new Error('Failed to fetch');
+   475→      const { entries: rawEntries } = await res.json();
+   476→
+   477→      const decrypted: DecryptedEntry[] = [];
+   478→      for (const e of rawEntries) {
+   479→        try {
+   480→          const data = await decryptEntry(e.encryptedData, e.iv, encryptionKey);
+   481→          decrypted.push({ id: e.id, data, createdAt: e.createdAt, updatedAt: e.updatedAt });
+   482→        } catch {
+   483→          console.warn('Failed to decrypt entry:', e.id);
+   484→        }
+   485→      }
+   486→      setEntries(decrypted);
+   487→    } catch {
+   488→      toast.error('Failed to load vault entries');
+   489→    } finally {
+   490→      setLoading(false);
+   491→    }
+   492→  }, [token, encryptionKey, setLoading, setEntries]);
+   493→
+   494→  useEffect(() => {
+   495→    fetchVersion();
+   496→    fetchEntries();
+   497→  }, [fetchEntries]);
+   498→
+   499→  const fetchVersion = async () => {
+   500→    try {
+   501→      const res = await fetch('/api/version');
+   502→      if (res.ok) {
+   503→        const data = await res.json();
+   504→        setVersionInfo(data.currentVersion);
+   505→      }
+   506→    } catch { /* fallback */ }
+   507→  };
+   508→
+   509→  const handleLogout = async () => {
+   510→    const { token: t } = useAuthStore.getState();
+   511→    if (t) {
+   512→      await fetch('/api/auth/logout', {
+   513→        method: 'POST',
+   514→        headers: { 'Content-Type': 'application/json' },
+   515→        body: JSON.stringify({ token: t }),
+   516→      });
+   517→    }
+   518→    logout();
+   519→    useTimeoutStore.getState().reset();
+   520→    toast.success('Logged out successfully');
+   521→  };
+   522→
+   523→  const handleAddEntry = () => {
+   524→    setEditingEntry(null);
+   525→    setFormOpen(true);
+   526→  };
+   527→
+   528→  const handleEditEntry = (entry: DecryptedEntry) => {
+   529→    setEditingEntry(entry);
+   530→    setFormOpen(true);
+   531→  };
+   532→
+   533→  const handleDuplicateEntry = (entry: DecryptedEntry) => {
+   534→    const dupData: VaultEntryData = {
+   535→      ...entry.data,
+   536→      platform: entry.data.platform + ' (Copy)',
+   537→      lastAccessed: '',
+   538→      isFavorite: false,
+   539→      expiryDate: entry.data.expiryDate,
+   540→    };
+   541→    const dup: DecryptedEntry = {
+   542→      id: '',
+   543→      data: dupData,
+   544→      createdAt: new Date().toISOString(),
+   545→      updatedAt: new Date().toISOString(),
+   546→    };
+   547→    setEditingEntry(dup);
+   548→    setFormOpen(true);
+   549→  };
+   550→
+   551→  const handleViewEntry = (entry: DecryptedEntry) => {
+   552→    setDetailEntry(entry);
+   553→    setDetailOpen(true);
+   554→  };
+   555→
+   556→  const handleSaved = (entry: DecryptedEntry) => addEntry(entry);
+   557→  const handleUpdated = (entry: DecryptedEntry) => updateEntry(entry.id, entry);
+   558→
+   559→  const handleDelete = async (id: string) => {
+   560→    if (!token) return;
+   561→    try {
+   562→      const res = await fetch(`/api/vault/entries/${id}`, {
+   563→        method: 'DELETE',
+   564→        headers: { Authorization: `Bearer ${token}` },
+   565→      });
+   566→      if (!res.ok) throw new Error('Failed to delete');
+   567→      removeEntry(id);
+   568→    } catch {
+   569→      toast.error('Failed to delete entry');
+   570→    }
+   571→  };
+   572→
+   573→  const filteredEntries = getFilteredAndSorted();
+   574→  const hasSelection = selectedIds.size > 0;
+   575→  const selectedCount = selectedIds.size;
+   576→  const allSelected = filteredEntries.length > 0 && filteredEntries.every((e) => selectedIds.has(e.id));
+   577→
+   578→  const handleBulkDelete = async () => {
+   579→    if (!token) return;
+   580→    try {
+   581→      const ids = Array.from(selectedIds);
+   582→      await Promise.all(
+   583→        ids.map((id) =>
+   584→          fetch(`/api/vault/entries/${id}`, {
+   585→            method: 'DELETE',
+   586→            headers: { Authorization: `Bearer ${token}` },
+   587→          })
+   588→        )
+   589→      );
+   590→      removeEntries(ids);
+   591→      toast.success(`Deleted ${ids.length} entries`);
+   592→    } catch {
+   593→      toast.error('Failed to delete some entries');
+   594→    }
+   595→  };
+   596→
+   597→  return (
+   598→    <div
+   599→      className="min-h-screen flex flex-col vault-bg vault-bg-mesh screen-transition"
+   600→      onMouseMove={useTimeoutStore.getState().resetTimer}
+   601→      onKeyDown={useTimeoutStore.getState().resetTimer}
+   602→      onWheel={useTimeoutStore.getState().resetTimer}
+   603→      onClick={useTimeoutStore.getState().resetTimer}
+   604→    >
+   605→      {/* Header */}
+   606→      <header className="sticky top-0 z-40 border-b border-border/40 glass-strong header-glow-line">
+   607→        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+   608→          <div className="flex items-center gap-3">
+   609→            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
+   610→              <VaultIcon className="h-4 w-4 text-primary" />
+   611→            </div>
+   612→            <div>
+   613→              <h1 className="text-sm font-semibold leading-none tracking-tight">Password Vault</h1>
+   614→              <p className="text-[10px] text-muted-foreground font-mono">{versionInfo}</p>
+   615→            </div>
+   616→          </div>
+   617→
+   618→          <div className="flex items-center gap-3">
+   619→            <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
+   620→              <div className="h-5 w-px bg-border/50" />
+   621→              <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
+   622→                <span className="text-xs font-semibold text-primary">{username?.charAt(0).toUpperCase()}</span>
+   623→              </div>
+   624→              <span className="text-xs">{username}</span>
+   625→            </div>
+   626→            <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground hover:text-destructive h-8">
+   627→              <LogOut className="h-3.5 w-3.5 mr-1.5" />
+   628→              <span className="hidden sm:inline text-xs">Logout</span>
+   629→            </Button>
+   630→          </div>
+   631→        </div>
+   632→      </header>
+   633→
+   634→      {/* Main content */}
+   635→      <main className="flex-1 max-w-6xl mx-auto w-full px-3 sm:px-4 md:px-6 py-4 sm:py-6">
+   636→        <StatsOverview />
+   637→        <VaultHeader
+   638→          onAddEntry={handleAddEntry}
+   639→          onExport={() => setExportOpen(true)}
+   640→          onImport={() => setImportOpen(true)}
+   641→          onChangePassword={() => setChangePwOpen(true)}
+   642→        />
+   643→
+   644→
+   645→        {/* Bulk actions bar */}
+   646→        {hasSelection && (
+   647→          <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center gap-2 p-2.5 sm:p-3 border-t border-primary/20 bg-primary/5 glass-strong bulk-bar sm:rounded-xl sm:static sm:border sm:border-primary/20 pb-[calc(0.625rem+env(safe-area-inset-bottom))] sm:pb-2.5">
+   648→            <div className="flex items-center gap-1.5 text-sm">
+   649→              <button
+   650→                onClick={() => toggleSelectAll(filteredEntries.map((e) => e.id))}
+   651→                className="h-5 w-5 flex items-center justify-center"
+   652→                title={allSelected ? 'Deselect all' : 'Select all'}
+   653→              >
+   654→                {allSelected ? (
+   655→                  <CheckSquare className="h-5 w-5 text-primary" />
+   656→                ) : (
+   657→                  <Square className="h-5 w-5 text-muted-foreground/50" />
+   658→                )}
+   659→              </button>
+   660→              <span className="text-primary font-medium">
+   661→                {selectedCount} selected
+   662→              </span>
+   663→            </div>
+   664→            <div className="flex-1" />
+   665→            <Button
+   666→              variant="outline"
+   667→              size="sm"
+   668→              onClick={handleBulkDelete}
+   669→              className="h-8 gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10"
+   670→            >
+   671→              <Trash2 className="h-3.5 w-3.5" />
+   672→              <span className="text-xs">Delete Selected</span>
+   673→            </Button>
+   674→            <Button
+   675→              variant="ghost"
+   676→              size="sm"
+   677→              onClick={clearSelection}
+   678→              className="h-8 text-xs text-muted-foreground hover:text-foreground"
+   679→            >
+   680→              Cancel
+   681→            </Button>
+   682→          </div>
+   683→        )}
+   684→        {hasSelection && <div className="h-14 sm:h-0" />}
+   685→        <div className="mt-6">
+   686→          {isLoading ? (
+   687→            <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-2'}>
+   688→              {Array.from({ length: 6 }).map((_, i) => (
+   689→                <div key={i} className="space-y-3 rounded-xl border border-border/30 p-4">
+   690→                  <div className="flex items-center gap-2">
+   691→                    <Skeleton className="h-8 w-8 rounded-lg skeleton-shimmer" />
+   692→                    <Skeleton className="h-4 w-2/5 skeleton-shimmer" />
+   693→                  </div>
+   694→                  <Skeleton className="h-8 w-full rounded-md skeleton-shimmer" />
+   695→                  <Skeleton className="h-8 w-full rounded-md skeleton-shimmer" />
+   696→                  <Skeleton className="h-8 w-3/4 rounded-md skeleton-shimmer" />
+   697→                  <Skeleton className="h-3 w-1/2 skeleton-shimmer" />
+   698→                </div>
+   699→              ))}
+   700→            </div>
+   701→          ) : filteredEntries.length === 0 ? (
+   702→            <div className="flex flex-col items-center justify-center py-24 text-center animate-fade-in">
+   703→              <div className="relative mb-6">
+   704→                <div className="w-24 h-24 rounded-3xl bg-muted/30 flex items-center justify-center float-animate empty-pulse-ring">
+   705→                  <VaultIcon className="h-12 w-12 text-muted-foreground/20" />
+   706→                </div>
+   707→                <div className="absolute -inset-4 rounded-[2rem] bg-primary/5 blur-xl -z-10" />
+   708→              </div>
+   709→              <h3 className="text-lg font-medium text-muted-foreground">
+   710→                {searchQuery ? 'No results found' : 'Your vault is empty'}
+   711→              </h3>
+   712→              <p className="text-sm text-muted-foreground/50 mt-2 max-w-sm">
+   713→                {searchQuery
+   714→                  ? <>No entries match &ldquo;<span className="text-primary/70">{searchQuery}</span>&rdquo;. Try a different search term.</>
+   715→                  : 'Add your first password entry to start building your secure vault.'}
+   716→              </p>
+   717→              {!searchQuery && (
+   718→                <p className="text-[10px] text-muted-foreground/30 mt-1 flex items-center gap-1">
+   719→                  <Shield className="h-3 w-3" />
+   720→                  All passwords encrypted with AES-256-GCM
+   721→                </p>
+   722→              )}
+   723→              {!searchQuery && (
+   724→                <Button onClick={handleAddEntry} className="mt-5 btn-gradient-primary">
+   725→                  <Sparkles className="h-4 w-4 mr-2" />
+   726→                  Add Your First Entry
+   727→                  <ChevronRight className="h-4 w-4 ml-1" />
+   728→                </Button>
+   729→              )}
+   730→            </div>
+   731→          ) : (
+   732→            <>
+   733→              {viewMode === 'grid' && <RecentlyUsedSection />}
+   734→
+   735→              {viewMode === 'grid' ? (
+   736→                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 stagger-children">
+   737→                  {filteredEntries.map((entry) => (
+   738→                    <EntryCard key={entry.id} entry={entry} onEdit={handleEditEntry} onDuplicate={handleDuplicateEntry} onDelete={handleDelete} onView={handleViewEntry} />
+   739→                  ))}
+   740→                </div>
+   741→              ) : (
+   742→                <div className="space-y-1.5 overflow-x-auto">
+   743→                  <div className="flex items-center gap-3 px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50 border-b border-border/30 mb-1 min-w-[500px]">
+   744→                    <div className="flex-1">Platform</div>
+   745→                    <div className="hidden md:block w-36">Username</div>
+   746→                    <div className="hidden lg:block w-44">Email</div>
+   747→                    <div className="w-48">Password</div>
+   748→                    <div className="hidden sm:block w-24 text-right">Modified</div>
+   749→                    <div className="w-16" />
+   750→                  </div>
+   751→                  {filteredEntries.map((entry) => (
+   752→                    <EntryRow key={entry.id} entry={entry} onEdit={handleEditEntry} onDelete={handleDelete} />
+   753→                  ))}
+   754→                </div>
+   755→              )}
+   756→            </>
+   757→          )}
+   758→        </div>
+   759→      </main>
+   760→
+   761→      {/* Footer */}
+   762→      <footer className="footer-gradient-border mt-auto">
+   763→        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-2 text-[10px] text-muted-foreground">
+   764→          <div className="flex items-center gap-2">
+   765→            <span className="flex items-center gap-1.5">
+   766→              <span className="session-dot" />
+   767→              <span>Session active</span>
+   768→            </span>
+   769→            <span className="hidden sm:inline text-muted-foreground/30">·</span>
+   770→            <span>Password Vault {versionInfo} — Zero-Knowledge Encryption</span>
+   771→          </div>
+   772→          <div className="flex items-center gap-3">
+   773→            <ThemeToggle />
+   774→            <span className="hidden md:flex items-center gap-1 text-muted-foreground/60">
+   775→              ⌘K Search · ⌘N New · Esc Clear
+   776→            </span>
+   777→            <span className="flex items-center gap-1">
+   778→              <Shield className="h-3 w-3" />
+   779→              AES-256-GCM · PBKDF2
+   780→            </span>
+   781→          </div>
+   782→        </div>
+   783→      </footer>
+   784→
+   785→      {/* Dialogs */}
+   786→      <EntryFormDialog
+   787→        open={formOpen}
+   788→        onOpenChange={(open) => {
+   789→          setFormOpen(open);
+   790→          if (!open) setEditingEntry(null);
+   791→        }}
+   792→        entry={editingEntry}
+   793→        onSaved={handleSaved}
+   794→        onUpdated={handleUpdated}
+   795→      />
+   796→      <ImportExportDialog mode="export" open={exportOpen} onOpenChange={setExportOpen} />
+   797→      <ImportExportDialog mode="import" open={importOpen} onOpenChange={setImportOpen} />
+   798→      <ChangePasswordDialog open={changePwOpen} onOpenChange={setChangePwOpen} />
+   799→      <EntryDetailSheet
+   800→        entry={detailEntry}
+   801→        open={detailOpen}
+   802→        onOpenChange={setDetailOpen}
+   803→        onEdit={handleEditEntry}
+   804→        onDuplicate={handleDuplicateEntry}
+   805→        onDelete={handleDelete}
+   806→      />
+   807→      <InactivityWarning />
+   808→    </div>
+   809→  );
+   810→}
+   811→
+   812→// =============== MAIN APP ===============
+   813→export default function HomePage() {
+   814→  const { isAuthenticated } = useAuthStore();
+   815→
+   816→  // Activity tracking + timeout
+   817→  useEffect(() => {
+   818→    if (!isAuthenticated) return;
+   819→
+   820→    const TIMEOUT_MS = 5 * 60 * 1000;
+   821→    const WARNING_MS = 4 * 60 * 1000;
+   822→    const COUNTDOWN_INTERVAL = 1000;
+   823→
+   824→    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+   825→    let countdownId: ReturnType<typeof setInterval> | undefined;
+   826→    let lastActivity = Date.now();
+   827→    let warningTriggered = false;
+   828→
+   829→    const reset = () => {
+   830→      lastActivity = Date.now();
+   831→      warningTriggered = false;
+   832→      useTimeoutStore.getState().resetTimer();
+   833→    };
+   834→
+   835→    const onActivity = () => {
+   836→      if (useTimeoutStore.getState().isWarning) {
+   837→        reset();
+   838→        return;
+   839→      }
+   840→      lastActivity = Date.now();
+   841→    };
+   842→
+   843→    window.addEventListener('mousemove', onActivity);
+   844→    window.addEventListener('keydown', onActivity);
+   845→    window.addEventListener('scroll', onActivity);
+   846→    window.addEventListener('click', onActivity);
+   847→    window.addEventListener('touchstart', onActivity);
+   848→
+   849→    const checkInterval = setInterval(() => {
+   850→      const elapsed = Date.now() - lastActivity;
+   851→
+   852→      if (elapsed >= TIMEOUT_MS) {
+   853→        clearInterval(checkInterval);
+   854→        if (countdownId) clearInterval(countdownId);
+   855→        if (timeoutId) clearTimeout(timeoutId);
+   856→        handleAutoLogout();
+   857→        return;
+   858→      }
+   859→
+   860→      if (elapsed >= WARNING_MS && !warningTriggered) {
+   861→        warningTriggered = true;
+   862→        useTimeoutStore.getState().startWarning();
+   863→        const remaining = Math.ceil((TIMEOUT_MS - elapsed) / 1000);
+   864→        useTimeoutStore.setState({ countdown: remaining });
+   865→
+   866→        countdownId = setInterval(() => {
+   867→          const { isWarning: stillWarning, countdown: current } = useTimeoutStore.getState();
+   868→          if (!stillWarning) {
+   869→            clearInterval(countdownId);
+   870→            return;
+   871→          }
+   872→          if (current <= 1) {
+   873→            clearInterval(countdownId);
+   874→            handleAutoLogout();
+   875→          } else {
+   876→            useTimeoutStore.setState({ countdown: current - 1 });
+   877→          }
+   878→        }, COUNTDOWN_INTERVAL);
+   879→      }
+   880→    }, 1000);
+   881→
+   882→    const handleAutoLogout = async () => {
+   883→      const { token: t } = useAuthStore.getState();
+   884→      if (t) {
+   885→        await fetch('/api/auth/logout', {
+   886→          method: 'POST',
+   887→          headers: { 'Content-Type': 'application/json' },
+   888→          body: JSON.stringify({ token: t }),
+   889→        });
+   890→      }
+   891→      useAuthStore.getState().logout();
+   892→      useTimeoutStore.getState().reset();
+   893→      toast.info('Logged out due to inactivity');
+   894→    };
+   895→
+   896→    return () => {
+   897→      clearInterval(checkInterval);
+   898→      if (countdownId) clearInterval(countdownId);
+   899→      if (timeoutId) clearTimeout(timeoutId);
+   900→      window.removeEventListener('mousemove', onActivity);
+   901→      window.removeEventListener('keydown', onActivity);
+   902→      window.removeEventListener('scroll', onActivity);
+   903→      window.removeEventListener('click', onActivity);
+   904→      window.removeEventListener('touchstart', onActivity);
+   905→    };
+   906→  }, [isAuthenticated]);
+   907→
+   908→  useEffect(() => {
+   909→    setTimeoutLogoutCallback(async () => {
+   910→      const { token: t } = useAuthStore.getState();
+   911→      if (t) {
+   912→        await fetch('/api/auth/logout', {
+   913→          method: 'POST',
+   914→          headers: { 'Content-Type': 'application/json' },
+   915→          body: JSON.stringify({ token: t }),
+   916→        });
+   917→      }
+   918→      useAuthStore.getState().logout();
+   919→      useTimeoutStore.getState().reset();
+   920→      toast.info('Logged out due to inactivity');
+   921→    });
+   922→  }, []);
+   923→
+   924→  return (
+   925→    <div key={isAuthenticated ? 'vault' : 'auth'} className="screen-transition">
+   926→      {isAuthenticated ? <VaultScreen /> : <AuthScreen />}
+   927→    </div>
+   928→  );
+   929→}

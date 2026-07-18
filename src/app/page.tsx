@@ -23,6 +23,7 @@ import { CategoryTag, type CategoryId, CATEGORIES } from '@/components/vault/cat
 import { EntryDetailSheet } from '@/components/vault/entry-detail-sheet';
 import { StatsOverview } from '@/components/vault/stats-overview';
 import { ThemeToggle } from '@/components/vault/theme-toggle';
+import { ErrorBoundary } from '@/components/error-boundary';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -50,10 +51,14 @@ import {
   CheckSquare,
   Circle,
   Square,
+  Download,
+  Wand2,
+  HardDriveDownload,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const APP_VERSION = 'v0.7.0';
+const APP_VERSION = 'v1.0.0';
 
 // =============== AUTH SCREEN ===============
 function AuthScreen() {
@@ -461,6 +466,8 @@ function VaultScreen() {
   const [detailEntry, setDetailEntry] = useState<DecryptedEntry | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [versionInfo, setVersionInfo] = useState<string>(APP_VERSION);
+  const [showBackupReminder, setShowBackupReminder] = useState(false);
+  const [daysSinceBackup, setDaysSinceBackup] = useState<number>(0);
   const fetchedRef = useRef(false);
 
   const fetchEntries = useCallback(async () => {
@@ -495,6 +502,19 @@ function VaultScreen() {
     fetchVersion();
     fetchEntries();
   }, [fetchEntries]);
+
+  useEffect(() => {
+    if (entries.length === 0) return;
+    const lastExport = localStorage.getItem('vault_last_export');
+    if (!lastExport) {
+      setDaysSinceBackup(Infinity);
+      setShowBackupReminder(true);
+      return;
+    }
+    const days = (Date.now() - parseInt(lastExport)) / (1000 * 60 * 60 * 24);
+    setDaysSinceBackup(Math.floor(days));
+    setShowBackupReminder(days >= 7);
+  }, [entries.length]);
 
   const fetchVersion = async () => {
     try {
@@ -634,6 +654,23 @@ function VaultScreen() {
       {/* Main content */}
       <main className="flex-1 max-w-6xl mx-auto w-full px-3 sm:px-4 md:px-6 py-4 sm:py-6">
         <StatsOverview />
+        {entries.length > 0 && showBackupReminder && (
+          <div className="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 animate-fade-in mb-4">
+            <div className="h-8 w-8 rounded-lg bg-amber-500/20 flex items-center justify-center shrink-0">
+              <HardDriveDownload className="h-4 w-4 text-amber-500" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-amber-500/90">Backup recommended</p>
+              <p className="text-xs text-muted-foreground/60">You haven't exported your vault in {daysSinceBackup === Infinity ? 'over 7' : daysSinceBackup} days</p>
+            </div>
+            <Button variant="outline" size="sm" className="shrink-0 text-xs h-7 border-amber-500/30 hover:bg-amber-500/10" onClick={() => setExportOpen(true)}>
+              Export Now
+            </Button>
+            <Button variant="ghost" size="sm" className="shrink-0 h-7 w-7 p-0 text-muted-foreground/50 hover:text-muted-foreground" onClick={() => setShowBackupReminder(false)}>
+              <X className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        )}
         <VaultHeader
           onAddEntry={handleAddEntry}
           onExport={() => setExportOpen(true)}
@@ -698,35 +735,79 @@ function VaultScreen() {
                 </div>
               ))}
             </div>
-          ) : filteredEntries.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 text-center animate-fade-in">
+          ) : filteredEntries.length === 0 && !searchQuery ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center animate-fade-in">
+              {/* Welcome message */}
+              <div className="text-center mb-8 animate-fade-in">
+                <h2 className="text-xl font-semibold mb-1">Welcome to your Vault</h2>
+                <p className="text-sm text-muted-foreground/60">Get started by adding your first password, or try these quick actions:</p>
+              </div>
+
+              {/* Quick-action cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-2xl mb-10">
+                <button
+                  onClick={handleAddEntry}
+                  className="flex flex-col items-center gap-3 p-5 rounded-xl bg-muted/20 border border-border/30 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all duration-200 hover:scale-[1.02] group text-left"
+                >
+                  <div className="h-10 w-10 rounded-xl bg-emerald-500/15 flex items-center justify-center group-hover:bg-emerald-500/25 transition-colors">
+                    <KeyRound className="h-5 w-5 text-emerald-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">Add Password</p>
+                    <p className="text-xs text-muted-foreground/60 mt-0.5">Store a login credential</p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setImportOpen(true)}
+                  className="flex flex-col items-center gap-3 p-5 rounded-xl bg-muted/20 border border-border/30 hover:border-teal-500/30 hover:bg-teal-500/5 transition-all duration-200 hover:scale-[1.02] group text-left"
+                >
+                  <div className="h-10 w-10 rounded-xl bg-teal-500/15 flex items-center justify-center group-hover:bg-teal-500/25 transition-colors">
+                    <Download className="h-5 w-5 text-teal-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">Import Data</p>
+                    <p className="text-xs text-muted-foreground/60 mt-0.5">Import from another manager</p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={handleAddEntry}
+                  className="flex flex-col items-center gap-3 p-5 rounded-xl bg-muted/20 border border-border/30 hover:border-amber-500/30 hover:bg-amber-500/5 transition-all duration-200 hover:scale-[1.02] group text-left"
+                >
+                  <div className="h-10 w-10 rounded-xl bg-amber-500/15 flex items-center justify-center group-hover:bg-amber-500/25 transition-colors">
+                    <Wand2 className="h-5 w-5 text-amber-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">Generate Password</p>
+                    <p className="text-xs text-muted-foreground/60 mt-0.5">Create a strong password</p>
+                  </div>
+                </button>
+              </div>
+
+              {/* Vault icon + encryption note + CTA */}
               <div className="relative mb-6">
                 <div className="w-24 h-24 rounded-3xl bg-muted/30 flex items-center justify-center float-animate empty-pulse-ring">
                   <VaultIcon className="h-12 w-12 text-muted-foreground/20" />
                 </div>
                 <div className="absolute -inset-4 rounded-[2rem] bg-primary/5 blur-xl -z-10" />
               </div>
-              <h3 className="text-lg font-medium text-muted-foreground">
-                {searchQuery ? 'No results found' : 'Your vault is empty'}
-              </h3>
-              <p className="text-sm text-muted-foreground/50 mt-2 max-w-sm">
-                {searchQuery
-                  ? <>No entries match &ldquo;<span className="text-primary/70">{searchQuery}</span>&rdquo;. Try a different search term.</>
-                  : 'Add your first password entry to start building your secure vault.'}
+              <p className="text-[10px] text-muted-foreground/30 flex items-center gap-1">
+                <Shield className="h-3 w-3" />
+                All passwords encrypted with AES-256-GCM
               </p>
-              {!searchQuery && (
-                <p className="text-[10px] text-muted-foreground/30 mt-1 flex items-center gap-1">
-                  <Shield className="h-3 w-3" />
-                  All passwords encrypted with AES-256-GCM
-                </p>
-              )}
-              {!searchQuery && (
-                <Button onClick={handleAddEntry} className="mt-5 btn-gradient-primary">
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  Add Your First Entry
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              )}
+              <Button onClick={handleAddEntry} className="mt-5 btn-gradient-primary">
+                <Sparkles className="h-4 w-4 mr-2" />
+                Add Your First Entry
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          ) : filteredEntries.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 text-center animate-fade-in">
+              <h3 className="text-lg font-medium text-muted-foreground">No results found</h3>
+              <p className="text-sm text-muted-foreground/50 mt-2 max-w-sm">
+                No entries match &ldquo;<span className="text-primary/70">{searchQuery}</span>&rdquo;. Try a different search term.
+              </p>
             </div>
           ) : (
             <>
@@ -922,8 +1003,10 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div key={isAuthenticated ? 'vault' : 'auth'} className="screen-transition">
-      {isAuthenticated ? <VaultScreen /> : <AuthScreen />}
-    </div>
+    <ErrorBoundary>
+      <div key={isAuthenticated ? 'vault' : 'auth'} className="screen-transition">
+        {isAuthenticated ? <VaultScreen /> : <AuthScreen />}
+      </div>
+    </ErrorBoundary>
   );
 }

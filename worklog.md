@@ -930,3 +930,54 @@ Stage Summary:
 - 未解决问题或风险:
   1. 应用已具备 v1.0.0 发布条件，无需更多必要修改
   2. 后续可考虑：HIBP API 集成、Framer Motion 动画、文件夹功能、第三方导入
+
+---
+Task ID: readme
+Agent: Documentation Agent
+Task: Generate comprehensive README.md for VaultGuard v1.0.0
+
+Work Log:
+- Read entire worklog.md (933 lines, 25 task entries spanning v0.1.0 → v1.0.0) to understand full project history and all features
+- Verified actual project structure (src/app, src/components, src/lib, src/hooks, src/store, public directories)
+- Created /home/z/my-project/README.md with 11 sections:
+  1. Header — project name "VaultGuard", one-liner, badges (TypeScript, Next.js 16, MIT, v1.0.0), description paragraph
+  2. Features — 8 categorized sections (Security, Vault Management, Organization, 2FA/TOTP, Security Audit, Import/Export, Design, PWA) with emoji headers and comprehensive bullet points
+  3. Quick Start — 5-step beginner-friendly setup guide (clone, install, db:push, dev, open browser)
+  4. How It Works — ASCII art architecture diagram showing browser vs server data flow, plus 4 plain-English bullet points explaining zero-knowledge architecture
+  5. Tech Stack — 11-row table (Framework, Language, Styling, Database, State, Encryption, 2FA/TOTP, Icons, Animations, Theming, Notifications)
+  6. Project Structure — directory tree with inline comments for all key files
+  7. API Reference — 13-row table (Method, Endpoint, Description, Auth requirement)
+  8. Environment Variables — single DATABASE_URL variable with explanation
+  9. Deployment — VPS, Railway, Fly.io, Docker, PWABuilder options
+  10. License — full MIT license text
+  11. Contributing — brief note about opening issues first
+
+Stage Summary:
+- Created comprehensive, professional README.md at /home/z/my-project/README.md
+- All features sourced from worklog history (25 tasks, v0.1.0 through v1.0.0 release)
+- Project structure verified against actual file system
+- Language kept accessible for non-developers while remaining professional
+- Product name "VaultGuard" used consistently throughout
+
+---
+Task ID: pwa
+Agent: PWA Setup Agent
+Task: Set up full PWA (Progressive Web App) support
+
+Work Log:
+- Read worklog.md and existing source files (layout.tsx, page.tsx) to understand project context
+- Created `public/icon.svg` — clean emerald/teal gradient rounded-square lock icon with white lock body and keyhole
+- Created `public/manifest.json` — Web App Manifest with standalone display, dark background, emerald theme color, SVG icon
+- Created `public/sw.js` — Service worker with cache-first for static assets, network-first for navigation, no caching for API routes
+- Updated `src/app/layout.tsx` — replaced emoji data-URI icon with SVG icon, added PWA metadata via Next.js Metadata API (applicationName, manifest, themeColor, appleWebApp)
+- Created `src/hooks/use-pwa.ts` — client-side hook that registers the service worker on mount
+- Updated `src/app/page.tsx` — imported and called `usePWA()` as first hook in HomePage component
+- Created `PUBLIC_STORE_PACKAGES.md` — step-by-step instructions for generating Android/Windows store packages via PWABuilder
+- Ran `bun run lint` — 0 errors
+
+Stage Summary:
+- Full PWA support implemented: manifest, service worker, icon, meta tags, SW registration
+- App is now installable on desktop and mobile browsers
+- Service worker provides offline caching for static assets and the shell, while never caching sensitive API requests
+- Store packaging instructions provided for Google Play and Microsoft Store via PWABuilder
+- Lint passes with 0 errors

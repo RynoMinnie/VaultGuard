@@ -24,6 +24,7 @@ import { EntryDetailSheet } from '@/components/vault/entry-detail-sheet';
 import { StatsOverview } from '@/components/vault/stats-overview';
 import { ThemeToggle } from '@/components/vault/theme-toggle';
 import { ErrorBoundary } from '@/components/error-boundary';
+import { usePWA } from '@/hooks/use-pwa';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -892,6 +893,7 @@ function VaultScreen() {
 
 // =============== MAIN APP ===============
 export default function HomePage() {
+  usePWA();
   const { isAuthenticated } = useAuthStore();
 
   // Activity tracking + timeout

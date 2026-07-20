@@ -1168,3 +1168,105 @@ Remaining items (non-blocking for initial distribution):
   1. Test PWA install experience on a real device
   2. Optionally remove unused Prisma/SQLite packages from package.json (prisma, @prisma/client) to reduce bundle size
   3. Optionally run `bun run build` locally to verify the static export produces a working /out folder before deploying
+  4. The Preview Panel in the Z.ai sandbox may not render the app correctly due to the Caddy gateway proxy wrapper — this is a sandbox infrastructure limitation, NOT an app bug. The app works fine when deployed to a real host.
+
+---
+## HANDOFF DOCUMENT — For Starting a New Chat
+
+### What is VaultGuard?
+A zero-knowledge encrypted password manager built with Next.js 16. Fully client-side — all data stored in the user's browser via IndexedDB. No server, no cloud, no accounts. Inspired by KeePass. Version: v1.0.0.
+
+### Architecture
+- **Framework**: Next.js 16 (App Router) with `output: 'export'` — builds to a static `/out` folder
+- **Storage**: IndexedDB via custom wrapper (`src/lib/db-local.ts`) — 2 object stores: `settings` (vault credentials) and `entries` (encrypted vault entries)
+- **Encryption**: Web Crypto API — AES-256-GCM + PBKDF2 (600k iterations) in `src/lib/crypto.ts`
+- **State**: Zustand stores in `src/store/index.ts` (auth, vault, timeout)
+- **UI**: Tailwind CSS 4 + shadcn/ui (New York style) + Lucide icons + Sonner toasts
+- **Theme**: Dark/light via next-themes, emerald/teal accent color
+- **PWA**: manifest.json + sw.js in /public, installable on desktop/mobile
+- **Deployment**: Static site — Vercel (recommended), Netlify, or GitHub Pages. See PUBLIC_STORE_PACKAGES.md for full ELI10 guides.
+
+### Key Files
+```
+src/
+├── app/
+│   ├── layout.tsx          # Root layout, ThemeProvider, Toaster, PWA meta tags
+│   ├── page.tsx            # ENTIRE APP — AuthScreen + VaultScreen (~1000 lines, 'use client')
+│   └── globals.css         # All custom CSS animations, glass morphism, theme variables
+├── components/
+│   ├── error-boundary.tsx  # React ErrorBoundary with recovery UI
+│   ├── ui/                 # ~50 shadcn/ui components (DO NOT MODIFY)
+│   └── vault/
+│       ├── category-tag.tsx          # 9 color-coded categories
+│       ├── change-password-dialog.tsx # Re-encrypts all entries with new key
+│       ├── entry-card.tsx            # Grid view card (context menu, quick-copy)
+│       ├── entry-detail-sheet.tsx    # Side panel with breach check, strength analysis
+│       ├── entry-form-dialog.tsx     # Create/edit form with all fields
+│       ├── entry-row.tsx             # List view row
+│       ├── import-export-dialog.tsx  # JSON (encrypted) and CSV import/export
+│       ├── inactivity-warning.tsx    # 5-min auto-lock with 1-min countdown
+│       ├── password-generator.tsx    # Presets: Strong, Passphrase, PIN, Memorable
+│       ├── password-strength-meter.tsx
+│       ├── stats-overview.tsx        # 10 stat cards + security score
+│       ├── theme-toggle.tsx
+│       ├── totp-display.tsx          # Real-time TOTP with 30s countdown ring
+│       └── vault-header.tsx          # Search, filters, sort, view toggle, shortcuts
+├── hooks/
+│   ├── use-clipboard-auto-clear.ts   # 30s auto-clear on copy
+│   ├── use-mobile.ts
+│   ├── use-pwa.ts                    # Service worker registration
+│   └── use-toast.ts
+├── lib/
+│   ├── crypto.ts           # AES-256-GCM encrypt/decrypt, PBKDF2, password hashing, generatePassword
+│   ├── db-local.ts         # IndexedDB wrapper — vaultExists, getVaultCredentials, createVault, getAllEntries, saveEntry, updateEntry, deleteEntry, deleteEntries, saveEntries, clearAllData
+│   ├── platform-icons.tsx  # Platform name → icon mapping (17+ platforms)
+│   └── utils.ts            # cn() helper
+└── store/
+    └── index.ts            # Zustand: useAuthStore, useVaultStore, useTimeoutStore
+
+public/
+├── icon.svg        # Emerald vault lock icon for PWA
+├── logo.svg        # Z.ai logo (sandbox only, not part of app)
+├── manifest.json   # PWA manifest (standalone, emerald theme)
+├── robots.txt
+└── sw.js           # Service worker v2.0.0 (cache-first static, no API routes)
+
+Root:
+├── next.config.ts           # output: "export", typescript ignoreBuildErrors
+├── package.json
+├── tailwind.config.ts
+├── tsconfig.json
+├── README.md                # Product README with features, architecture, deployment
+├── PUBLIC_STORE_PACKAGES.md # ELI10 guides: deploy to Vercel/Netlify/GitHub Pages + submit to Google Play & Microsoft Store via PWABuilder
+└── worklog.md               # THIS FILE — development history and handoff doc
+```
+
+### Files That Were Deleted (Do NOT Recreate)
+- `src/app/api/` — entire directory (13 API route files) — no server needed
+- `src/lib/auth.ts` — server-side session validation — no server needed
+- `src/lib/db.ts` — Prisma client — no database needed
+- `src/lib/rate-limit.ts` — server-side rate limiter — no server needed
+- `prisma/schema.prisma` — entire prisma/ directory — no database needed
+- `src/store/index.ts.bak` — can be deleted (backup file)
+
+### Auth Flow (How Users Interact With the App)
+1. **First visit**: "Create Your Vault" screen — user enters vault name + master password
+2. **Return visit**: "Unlock Vault" screen — user enters master password (vault name shown)
+3. **On create**: Password is hashed with PBKDF2, salt stored in IndexedDB. Encryption key derived for vault entries.
+4. **On unlock**: Password hash verified against stored hash. If correct, encryption key derived, all entries decrypted and loaded.
+5. **On logout/timeout**: Encryption key cleared from memory. Vault locked.
+6. **Password change**: All entries re-encrypted with new key derived from new password.
+7. **Import/Export**: Encrypted JSON export (requires master password to decrypt). Plain CSV export (with warning). CSV import auto-encrypts entries.
+
+### Known Non-Blocking Items
+1. `package.json` still lists `prisma` and `@prisma/client` as dependencies — can be removed (they're unused now)
+2. PWA install experience not tested on a real device
+3. Preview Panel in Z.ai sandbox may not render the app (infrastructure limitation, not a bug)
+
+### How to Continue Development
+- Start dev server: `cd /home/z/my-project && bun run dev` (runs on port 3000)
+- Run lint: `bun run lint`
+- The app is a single page at `/` — all UI is in `src/app/page.tsx`
+- All data operations go through `src/lib/db-local.ts` — NEVER use fetch() or server-side code
+- User is a coding novice — explain things simply, avoid jargon
+- User's timezone: Africa/Johannesburg

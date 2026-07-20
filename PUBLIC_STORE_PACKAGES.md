@@ -114,7 +114,7 @@ Now we'll upload your project's code to GitHub from your computer. Open your **T
    - **Project Name**: leave it as `vaultguard` (or change it — this affects your URL)
    - **Framework Preset**: it should auto-detect **Next.js**
    - **Build Command**: should say `next build`
-   - **Output Directory**: should say `.next`
+   - **Output Directory**: should say `out` (Vercel auto-detects this when your `next.config.ts` has `output: 'export'`)
 2. If anything looks wrong, you can change it — but if it says Next.js, you're good
 3. Click the blue **"Deploy"** button
 
@@ -160,7 +160,8 @@ Follow **Steps 1, 2, and 3** from the Vercel guide above to create a GitHub acco
 5. Find and click on your `vaultguard` repository
 6. On the "Build settings" page:
    - **Build command**: type `next build`
-   - **Publish directory**: type `.next`
+   - **Publish directory**: type `out`
+   > **Important:** VaultGuard uses Next.js static export, so the output goes into an `out` folder — NOT `.next`.
 7. Click the blue **"Deploy site"** button
 8. Wait about 1-2 minutes
 9. You'll see your site's URL (something like `https://random-words-12345.netlify.app`)
@@ -202,16 +203,84 @@ git commit -m "Add static export config"
 git push
 ```
 
-#### Step 3: Enable GitHub Pages
+#### Step 3: Configure GitHub Actions for Static Export
+
+GitHub Pages needs a small configuration file to know how to build your app. Don't worry — this is just copy-paste.
+
+1. On your computer, create a folder called `.github` inside your project, then create another folder called `workflows` inside that:
+   ```bash
+   mkdir -p .github/workflows
+   ```
+2. Create a file called `static-site.yml` inside the `workflows` folder:
+   ```bash
+   # Mac/Linux:
+   echo '' > .github/workflows/static-site.yml
+   # Then open the file in your text editor and paste the content below
+   ```
+   On Windows (PowerShell):
+   ```powershell
+   New-Item -Path .github/workflows/static-site.yml -ItemType File
+   # Then open the file in your text editor and paste the content below
+   ```
+3. Paste this exact content into `static-site.yml`:
+   ```yaml
+   name: Deploy to GitHub Pages
+
+   on:
+     push:
+       branches: [main]
+     workflow_dispatch:
+
+   permissions:
+     contents: read
+     pages: write
+     id-token: write
+
+   jobs:
+     build:
+       runs-on: ubuntu-latest
+       steps:
+         - uses: actions/checkout@v4
+         - uses: actions/setup-node@v4
+           with:
+             node-version: 20
+         - run: npm install
+         - run: npm run build
+         - uses: actions/upload-pages-artifact@v3
+           with:
+             path: ./out
+     deploy:
+       needs: build
+       runs-on: ubuntu-latest
+       environment:
+         name: github-pages
+         url: ${{ steps.deployment.outputs.page_url }}
+       steps:
+         - id: deployment
+           uses: actions/deploy-pages@v4
+   ```
+4. Save the file, then push to GitHub:
+   ```bash
+   git add .
+   git commit -m "Add GitHub Pages deployment workflow"
+   git push
+   ```
+
+#### Step 4: Enable GitHub Pages
 
 1. Go to your repository on GitHub (github.com/your-username/vaultguard)
 2. Click the **"Settings"** tab near the top of the page
 3. In the left sidebar, click **"Pages"**
 4. Under **"Build and deployment"**, find **"Source"**
-5. Click the dropdown and select **"GitHub Actions"** (or "Deploy from a branch" → select `main` branch → `/ (root)` folder → **Save**)
-6. Wait 1-2 minutes
-7. Refresh the page — you should see a green box at the top with your URL: `https://your-username.github.io/vaultguard`
-8. Click that link to test your app!
+5. Click the dropdown and select **"GitHub Actions"** (this tells GitHub to use the workflow file you just created)
+6. Click **Save**
+7. Go to the **"Actions"** tab in your repo — you should see the "Deploy to GitHub Pages" workflow running!
+8. Wait 1-2 minutes for it to finish (click on it to watch the progress)
+9. When it says ✅ green checkmark, go back to **Settings** → **Pages**
+10. You should see a green box at the top with your URL: `https://your-username.github.io/vaultguard`
+11. Click that link to test your app!
+
+> **Important:** If your repo name is NOT `vaultguard`, your URL will be `https://your-username.github.io/your-repo-name`. You may also need to add `basePath` to your `next.config.ts` — search online for "Next.js GitHub Pages basePath" if your CSS/links don't load.
 
 ---
 

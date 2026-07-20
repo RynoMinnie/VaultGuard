@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vaultguard-v1.0.0';
+const CACHE_NAME = 'vaultguard-v2.0.0';
 const STATIC_ASSETS = [
   '/',
   '/icon.svg',
@@ -29,27 +29,9 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch — network-first strategy for API, cache-first for static
+// Fetch — VaultGuard is fully static, no API routes
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-  const url = new URL(request.url);
-
-  // Never cache API requests (auth, vault data)
-  if (url.pathname.startsWith('/api/')) {
-    event.respondWith(
-      fetch(request).catch(() => {
-        // If offline and it's a GET request, try cache
-        if (request.method === 'GET') {
-          return caches.match(request);
-        }
-        return new Response(JSON.stringify({ error: 'You are offline' }), {
-          status: 503,
-          headers: { 'Content-Type': 'application/json' },
-        });
-      })
-    );
-    return;
-  }
 
   // For navigation requests, try network first, fall back to cache
   if (request.mode === 'navigate') {
@@ -64,7 +46,6 @@ self.addEventListener('fetch', (event) => {
     caches.match(request).then((cached) => {
       if (cached) return cached;
       return fetch(request).then((response) => {
-        // Cache successful GET responses
         if (response.ok && request.method === 'GET') {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {

@@ -233,29 +233,36 @@ VaultGuard is a fully client-side application. There are no API endpoints, no se
 
 ## Deployment (Free)
 
-VaultGuard is a static site with no server requirements. Deploy it for free:
+VaultGuard builds to a static `out/` folder (HTML + CSS + JS). No server, no database — just upload the files. See [PUBLIC_STORE_PACKAGES.md](./PUBLIC_STORE_PACKAGES.md) for detailed ELI10 step-by-step guides.
 
-### Vercel (Recommended)
+### Vercel (Recommended — Easiest)
 
 1. Push your code to GitHub
 2. Go to [vercel.com](https://vercel.com) and sign in with GitHub
 3. Click **"New Project"** → Import your repository
-4. Click **"Deploy"** — done!
+4. Vercel auto-detects Next.js static export and uses the `out/` directory
+5. Click **"Deploy"** — done!
 
 ### Netlify
 
 1. Push your code to GitHub
 2. Go to [netlify.com](https://netlify.com) and sign in with GitHub
 3. Click **"Add new site"** → **"Import an existing project"**
-4. Select your repo → Click **"Deploy site"**
+4. Set **Publish directory** to `out`
+5. Click **"Deploy site"**
 
 ### GitHub Pages
 
-1. Go to your repository **Settings** → **Pages**
-2. Set source to your main branch
-3. Save — your site is live at `username.github.io/repo-name`
+1. Push your code to GitHub
+2. Create a `.github/workflows/static-site.yml` file (see `PUBLIC_STORE_PACKAGES.md` for the exact content)
+3. Go to **Settings** → **Pages** → Set source to **GitHub Actions**
+4. Your site is live at `username.github.io/repo-name`
 
-> **Note:** For Next.js static export, you may need to add `output: 'export'` to your `next.config.ts`.
+### Any Static Host
+
+Run `npm run build` (or `bun run build`), then upload the `out/` folder to any web host.
+
+> **Note:** `next.config.ts` already has `output: 'export'` configured — no changes needed.
 
 ---
 

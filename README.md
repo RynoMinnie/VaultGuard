@@ -5,25 +5,30 @@
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Version](https://img.shields.io/badge/Version-v1.0.0-blue)
 
-**A zero-knowledge encrypted password manager — your passwords never leave your device.**
+**A zero-knowledge encrypted password manager that runs entirely in your browser. No server. No cloud. Your data never leaves your device.**
 
-VaultGuard is a fully self-hosted password manager that encrypts everything in your browser before it ever touches the server. It's designed for individuals and small teams who want full control over their credentials without trusting a third-party cloud service. Built with modern web technologies, it offers a polished, app-like experience with TOTP support, security auditing, and a beautiful glass-morphism UI that works on any device.
+VaultGuard is a 100% client-side password manager that encrypts everything locally using your browser's built-in Web Crypto API. There is no server, no database, no accounts, and no data transmission of any kind. Your vault lives entirely in your browser's IndexedDB storage. It offers a polished, app-like experience with TOTP support, security auditing, and a beautiful glass-morphism UI that works on any device.
 
 ---
 
 ## Features
+
+### 🔒 Privacy-First Architecture
+
+- **100% client-side** — no server stores your data
+- **IndexedDB storage** — data lives in your browser
+- **No accounts, no tracking, no analytics**
+- **Works completely offline** after first load
+- **Static site** — deploy anywhere for free
 
 ### 🔐 Security
 
 - **Zero-knowledge encryption** — all encryption and decryption happens in your browser using the Web Crypto API
 - **AES-256-GCM** symmetric encryption for every vault entry
 - **PBKDF2 key derivation** with 600,000 iterations to resist brute-force attacks
-- **Client-side only encryption** — your master password is never sent to the server
+- **Client-side only encryption** — your master password never leaves your browser
 - **Clipboard auto-clear** — copied passwords are automatically erased after 30 seconds
-- **Rate limiting** on login (5 req/min) and registration (3 req/min) to prevent brute-force attacks
 - **Inactivity auto-lock** — vault locks after 5 minutes of inactivity (with a 1-minute warning countdown)
-- **Session security headers** — `Cache-Control: no-store`, `Pragma: no-cache`, `X-Content-Type-Options: nosniff` on all auth endpoints
-- **Memory-only sessions** — closing your browser tab immediately ends the session
 
 ### 📋 Vault Management
 
@@ -81,13 +86,12 @@ VaultGuard is a fully self-hosted password manager that encrypts everything in y
 - **Responsive design** with 44px mobile touch targets and iOS safe-area support
 - **Keyboard shortcuts**: `⌘K` / `Ctrl+K` (search), `⌘N` / `Ctrl+N` (new entry), `Esc` (close dialogs)
 - **First-run onboarding** — welcoming empty state with quick-action cards to help you get started
-- **Session indicator** — pulsing green dot in the footer confirms your session is active
 
 ### 📱 PWA
 
 - **Installable as a native app** on both desktop and mobile
 - PWA manifest and service worker included in `/public`
-- Works offline-ready
+- Works offline after first load
 
 ---
 
@@ -108,52 +112,52 @@ cd vaultguard
 # 2. Install dependencies
 bun install
 
-# 3. Set up the database
-bun run db:push
-
-# 4. Start the development server
+# 3. Start the development server
 bun run dev
 
-# 5. Open in your browser
+# 4. Open in your browser
 # Visit http://localhost:3000
 ```
 
-That's it — no complex configuration needed. The app uses SQLite by default, so there's no external database to set up.
+That's it — no database setup, no environment variables, no configuration. Just install and run.
 
 ---
 
 ## How It Works (Security Architecture)
 
-VaultGuard uses a **zero-knowledge architecture**, which means the server never has access to your master password or any of your unencrypted data. Here's how it works:
+VaultGuard uses a **zero-knowledge, fully local architecture**. Everything happens in your browser — no data is ever sent anywhere.
 
 ```
-┌─────────────────────┐         ┌──────────────────────┐
-│   Your Browser      │         │     Server           │
-│                     │         │                      │
-│  Master Password    │──┐      │                      │
-│       │             │  │      │                      │
-│       ▼             │  │      │                      │
-│  PBKDF2 (600k iter) │  │      │                      │
-│       │             │  │      │                      │
-│       ▼             │  │      │                      │
-│  AES-256-GCM Key   │  │      │  Encrypted Data      │
-│       │             │  │      │  (unreadable!)       │
-│       ▼             │  │      │                      │
-│  Encrypt Password   │  │      │                      │
-│       │             │  │      │                      │
-└───────┼─────────────┘  │      └──────────────────────┘
-        │                │
-        │   Only this    │
-        │   is sent to   │
-        └──► the server ─┘
+┌─────────────────────────────────────────────┐
+│              Your Browser Only              │
+│                                             │
+│  Master Password                            │
+│       │                                     │
+│       ▼                                     │
+│  PBKDF2 (600,000 iterations)               │
+│       │                                     │
+│       ▼                                     │
+│  AES-256-GCM Encryption Key                │
+│       │                                     │
+│       ▼                                     │
+│  Encrypt / Decrypt Vault Entries            │
+│       │                                     │
+│       ▼                                     │
+│  IndexedDB (local browser storage)          │
+│                                             │
+│  ❌ No data sent to any server              │
+│  ❌ No accounts or tracking                 │
+│  ❌ No cloud storage                        │
+└─────────────────────────────────────────────┘
 ```
 
 **In plain English:**
 
 - Your **master password never leaves your browser** — it's used only to derive an encryption key locally
 - All encryption and decryption happens **in your browser** using the built-in Web Crypto API — no JavaScript libraries doing crypto
-- The server only stores **encrypted gibberish** — even if the server is hacked, your data is safe without the key
-- Session tokens are held **in memory only** — closing the tab or navigating away immediately logs you out
+- Your encrypted data is stored in **IndexedDB** — your browser's local database. It never touches the network.
+- There are **no accounts, no sessions, no tokens** — just "Create Vault" (first time) or "Unlock Vault" (return visits)
+- Clearing your browser data permanently deletes your vault (unless you've exported a backup)
 
 ---
 
@@ -164,7 +168,7 @@ VaultGuard uses a **zero-knowledge architecture**, which means the server never 
 | Framework | Next.js 16 (App Router) |
 | Language | TypeScript 5 |
 | Styling | Tailwind CSS 4 + shadcn/ui |
-| Database | SQLite via Prisma ORM |
+| Storage | IndexedDB (client-side storage) |
 | State | Zustand |
 | Encryption | Web Crypto API (AES-256-GCM, PBKDF2) |
 | 2FA/TOTP | otpauth |
@@ -180,9 +184,6 @@ VaultGuard uses a **zero-knowledge architecture**, which means the server never 
 ```
 src/
 ├── app/                    # Next.js App Router
-│   ├── api/                # Backend API routes
-│   │   ├── auth/           # Authentication (login, register, logout, validate, salt, change-password)
-│   │   └── vault/          # Vault operations (entries CRUD, import, export)
 │   ├── layout.tsx          # Root layout with ThemeProvider
 │   ├── page.tsx            # Main application page (auth screen + vault screen)
 │   └── globals.css         # Global styles, animations, and theme variables
@@ -200,7 +201,6 @@ src/
 │   │   ├── totp-display.tsx        # Real-time TOTP code with countdown
 │   │   ├── import-export-dialog.tsx # Import/export (JSON/CSV)
 │   │   ├── inactivity-warning.tsx  # Auto-lock warning dialog
-│   │   ├── change-password-dialog.tsx # Master password change + re-encrypt
 │   │   ├── category-tag.tsx        # Color-coded category badges
 │   │   └── theme-toggle.tsx        # Dark/light theme switcher
 │   └── error-boundary.tsx  # React error boundary (graceful crash recovery)
@@ -211,9 +211,7 @@ src/
 │   └── use-toast.ts                # Toast notifications
 ├── lib/                    # Utilities & helpers
 │   ├── crypto.ts           # Encryption/decryption (Web Crypto API)
-│   ├── auth.ts             # Server-side session management
-│   ├── db.ts               # Prisma database client
-│   ├── rate-limit.ts       # In-memory API rate limiting
+│   ├── db-local.ts         # IndexedDB storage layer
 │   ├── platform-icons.tsx  # Platform name → icon mappings
 │   └── utils.ts            # General utility functions
 ├── store/                  # Zustand state management
@@ -227,49 +225,37 @@ src/
 
 ---
 
-## API Reference
+## No Server Required
 
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| `POST` | `/api/auth/register` | Create a new account | No |
-| `GET` | `/api/auth/salt?username=X` | Get user's salt for key derivation | No |
-| `POST` | `/api/auth/login` | Authenticate and get session token | No |
-| `POST` | `/api/auth/logout` | End session | Yes |
-| `POST` | `/api/auth/validate` | Verify session is active | Yes |
-| `POST` | `/api/auth/change-password` | Change master password + re-encrypt vault | Yes |
-| `GET` | `/api/vault` | Fetch all vault entries | Yes |
-| `POST` | `/api/vault` | Create new vault entry | Yes |
-| `PUT` | `/api/vault` | Update existing entry | Yes |
-| `DELETE` | `/api/vault?id=X` | Delete entry | Yes |
-| `POST` | `/api/vault/import` | Import entries (JSON or CSV) | Yes |
-| `GET` | `/api/vault/export?format=json|csv` | Export vault (encrypted JSON or plain CSV) | Yes |
-| `GET` | `/api/version` | Get app version info | No |
-
-All authenticated endpoints require a `Bearer` token in the `Authorization` header.
+VaultGuard is a fully client-side application. There are no API endpoints, no server communication, and no data transmission. Everything runs in your browser using IndexedDB for storage.
 
 ---
 
-## Environment Variables
+## Deployment (Free)
 
-```env
-DATABASE_URL="file:./dev.db"
-```
+VaultGuard is a static site with no server requirements. Deploy it for free:
 
-That's the only one. VaultGuard is designed to work out of the box with minimal configuration — no API keys, no external services, no secrets to manage.
+### Vercel (Recommended)
 
----
+1. Push your code to GitHub
+2. Go to [vercel.com](https://vercel.com) and sign in with GitHub
+3. Click **"New Project"** → Import your repository
+4. Click **"Deploy"** — done!
 
-## Deployment
+### Netlify
 
-VaultGuard is designed for **self-hosted deployment** on any server with persistent disk storage (required for SQLite):
+1. Push your code to GitHub
+2. Go to [netlify.com](https://netlify.com) and sign in with GitHub
+3. Click **"Add new site"** → **"Import an existing project"**
+4. Select your repo → Click **"Deploy site"**
 
-- **VPS** — any Linux server with Node.js/Bun and persistent disk
-- **Railway** — works with a SQLite volume
-- **Fly.io** — deploy with a persistent volume attached
-- **Docker** — any Docker-capable host works
-- **PWA distribution** — use [PWABuilder](https://www.pwabuilder.com/) to package for the Microsoft Store, Google Play, or as a desktop app
+### GitHub Pages
 
-> A detailed deployment guide is coming soon.
+1. Go to your repository **Settings** → **Pages**
+2. Set source to your main branch
+3. Save — your site is live at `username.github.io/repo-name`
+
+> **Note:** For Next.js static export, you may need to add `output: 'export'` to your `next.config.ts`.
 
 ---
 

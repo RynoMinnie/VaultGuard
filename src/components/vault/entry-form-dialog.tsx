@@ -18,7 +18,6 @@ import { PasswordGenerator } from './password-generator';
 import { PasswordStrengthMeter } from './password-strength-meter';
 import { CategoryPicker, type CategoryId } from './category-tag';
 import { useAuthStore } from '@/store';
-import { encryptEntry } from '@/lib/crypto';
 import type { VaultEntryData } from '@/lib/crypto';
 import type { DecryptedEntry } from '@/store';
 import { toast } from 'sonner';
@@ -56,7 +55,7 @@ export function EntryFormDialog({
   onSaved,
   onUpdated,
 }: EntryFormDialogProps) {
-  const { encryptionKey, token } = useAuthStore();
+  const { encryptionKey } = useAuthStore();
   const [data, setData] = useState<VaultEntryData>(emptyData);
   const [saving, setSaving] = useState(false);
   const platformRef = useRef<HTMLInputElement>(null);
@@ -79,7 +78,7 @@ export function EntryFormDialog({
       toast.error('Platform name is required');
       return;
     }
-    if (!encryptionKey || !token) {
+    if (!encryptionKey) {
       toast.error('Not authenticated');
       return;
     }
@@ -95,54 +94,23 @@ export function EntryFormDialog({
           ? [...(entry.data.passwordHistory || []), { password: entry.data.password, timestamp: new Date().toISOString() }].slice(-10)
           : (data.passwordHistory || []),
       };
-      const { encryptedData, iv } = await encryptEntry(saveData, encryptionKey);
+
+      const now = new Date().toISOString();
 
       if (isEditing) {
-        const res = await fetch(`/api/vault/entries/${entry.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ encryptedData, iv }),
-        });
-
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.error || 'Failed to update');
-        }
-
-        const { entry: updated } = await res.json();
         onUpdated({
-          id: updated.id,
+          id: entry!.id,
           data: saveData,
-          createdAt: updated.createdAt,
-          updatedAt: updated.updatedAt,
+          createdAt: entry!.createdAt,
+          updatedAt: now,
         });
-        toast.success('Entry updated successfully');
       } else {
-        const res = await fetch('/api/vault/entries', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ encryptedData, iv }),
-        });
-
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.error || 'Failed to create');
-        }
-
-        const { entry: created } = await res.json();
         onSaved({
-          id: created.id,
+          id: crypto.randomUUID(),
           data: saveData,
-          createdAt: created.createdAt,
-          updatedAt: created.updatedAt,
+          createdAt: now,
+          updatedAt: now,
         });
-        toast.success('Entry created successfully');
       }
 
       onOpenChange(false);

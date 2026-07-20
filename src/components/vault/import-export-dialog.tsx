@@ -23,6 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuthStore, useVaultStore } from '@/store';
 import { decryptEntry, encryptEntry } from '@/lib/crypto';
 import type { VaultEntryData } from '@/lib/crypto';
+import { saveEntries, getAllEntries, deleteEntries as deleteEntriesDB } from '@/lib/db-local';
 import { toast } from 'sonner';
 import { Loader2, FileDown, FileUp, AlertTriangle, Lock, FileSpreadsheet, ShieldOff } from 'lucide-react';
 
@@ -30,10 +31,11 @@ interface ImportExportDialogProps {
   mode: 'export' | 'import';
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onImportComplete?: () => void;
 }
 
-export function ImportExportDialog({ mode, open, onOpenChange }: ImportExportDialogProps) {
-  const { token } = useAuthStore();
+export function ImportExportDialog({ mode, open, onOpenChange, onImportComplete }: ImportExportDialogProps) {
+  const { encryptionKey } = useAuthStore();
   const { entries, setEntries, addEntry } = useVaultStore();
   const [importMode, setImportMode] = useState<'merge' | 'replace'>('merge');
   const [exportFormat, setExportFormat] = useState<'json' | 'csv'>('json');
@@ -43,19 +45,27 @@ export function ImportExportDialog({ mode, open, onOpenChange }: ImportExportDia
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleExport = async () => {
-    if (!token) return;
+    if (!entries.length) return;
     setLoading(true);
     try {
-      const res = await fetch('/api/vault/export', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!res.ok) throw new Error('Export failed');
-
-      const data = await res.json();
+      const exportData = {
+        exportData: {
+          entries: entries.map(e => ({
+            platform: e.data.platform,
+            username: e.data.username,
+            email: e.data.email,
+            password: e.data.password,
+            category: e.data.category,
+            notes: e.data.other,
+            url: e.data.platformUrl,
+          })),
+          entryCount: entries.length,
+          exportedAt: new Date().toISOString(),
+        }
+      };
 
       // Create and download file
-      const blob = new Blob([JSON.stringify(data.exportData, null, 2)], {
+      const blob = new Blob([JSON.stringify(exportData.exportData, null, 2)], {
         type: 'application/json',
       });
       const url = URL.createObjectURL(blob);
@@ -67,7 +77,7 @@ export function ImportExportDialog({ mode, open, onOpenChange }: ImportExportDia
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      toast.success(`Exported ${data.exportData.entryCount} entries as encrypted JSON`);
+      toast.success(`Exported ${exportData.exportData.entryCount} entries as JSON`);
       localStorage.setItem('vault_last_export', Date.now().toString());
       onOpenChange(false);
     } catch {
@@ -119,7 +129,7 @@ export function ImportExportDialog({ mode, open, onOpenChange }: ImportExportDia
   };
 
   const handleImport = async () => {
-    if (!token || !selectedFile) return;
+    if (!encryptionKey || !selectedFile) return;
     setLoading(true);
     try {
       const text = await selectedFile.text();
@@ -129,26 +139,33 @@ export function ImportExportDialog({ mode, open, onOpenChange }: ImportExportDia
         throw new Error('Invalid vault file format');
       }
 
-      const res = await fetch('/api/vault/import', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ mode: importMode, entries: data.entries }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || 'Import failed');
+      // In replace mode, clear existing entries first
+      if (importMode === 'replace') {
+        const existingEntries = await getAllEntries();
+        if (existingEntries.length > 0) {
+          await deleteEntriesDB(existingEntries.map(e => e.id));
+        }
+        // Clear in-memory entries
+        setEntries([]);
       }
 
-      const result = await res.json();
+      // Store entries directly in IndexedDB
+      const storedEntries = data.entries.map((e: { encryptedData: string; iv: string }) => ({
+        id: crypto.randomUUID(),
+        encryptedData: e.encryptedData,
+        iv: e.iv,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }));
 
-      // Refresh entries from server
-      await fetchEntries();
+      await saveEntries(storedEntries);
 
-      toast.success(`Imported ${result.importedCount} entries (${importMode} mode)`);
+      // Reload vault entries (decrypt from IndexedDB)
+      if (onImportComplete) {
+        await onImportComplete();
+      }
+
+      toast.success(`Imported ${storedEntries.length} entries (${importMode} mode)`);
       onOpenChange(false);
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -160,12 +177,7 @@ export function ImportExportDialog({ mode, open, onOpenChange }: ImportExportDia
   };
 
   const handleCsvImport = async () => {
-    if (!token || !selectedFile) return;
-    const { encryptionKey } = useAuthStore.getState();
-    if (!encryptionKey) {
-      toast.error('Encryption key not available. Please log out and log in again.');
-      return;
-    }
+    if (!encryptionKey || !selectedFile) return;
 
     setLoading(true);
     try {
@@ -175,7 +187,16 @@ export function ImportExportDialog({ mode, open, onOpenChange }: ImportExportDia
         throw new Error('No valid entries found in CSV file');
       }
 
-      const encryptedEntries: { encryptedData: string; iv: string; createdAt: string; updatedAt: string }[] = [];
+      // In replace mode, clear existing entries first
+      if (importMode === 'replace') {
+        const existingEntries = await getAllEntries();
+        if (existingEntries.length > 0) {
+          await deleteEntriesDB(existingEntries.map(e => e.id));
+        }
+        setEntries([]);
+      }
+
+      const storedEntries: { id: string; encryptedData: string; iv: string; createdAt: string; updatedAt: string }[] = [];
       for (const row of parsed) {
         const entryData: VaultEntryData = {
           platform: row['Platform'] || '',
@@ -194,7 +215,8 @@ export function ImportExportDialog({ mode, open, onOpenChange }: ImportExportDia
         };
 
         const { encryptedData, iv } = await encryptEntry(entryData, encryptionKey);
-        encryptedEntries.push({
+        storedEntries.push({
+          id: crypto.randomUUID(),
           encryptedData,
           iv,
           createdAt: row['Created'] ? new Date(row['Created']).toISOString() : new Date().toISOString(),
@@ -202,26 +224,14 @@ export function ImportExportDialog({ mode, open, onOpenChange }: ImportExportDia
         });
       }
 
-      const res = await fetch('/api/vault/import', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ mode: importMode, entries: encryptedEntries }),
-      });
+      await saveEntries(storedEntries);
 
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || 'Import failed');
+      // Reload vault entries
+      if (onImportComplete) {
+        await onImportComplete();
       }
 
-      const result = await res.json();
-
-      // Refresh entries from server
-      await fetchEntries();
-
-      toast.success(`Imported ${result.importedCount} entries from CSV (${importMode} mode)`);
+      toast.success(`Imported ${storedEntries.length} entries from CSV (${importMode} mode)`);
       onOpenChange(false);
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -237,38 +247,6 @@ export function ImportExportDialog({ mode, open, onOpenChange }: ImportExportDia
       handleCsvImport();
     } else {
       handleImport();
-    }
-  };
-
-  const fetchEntries = async () => {
-    if (!token) return;
-    try {
-      const res = await fetch('/api/vault/entries', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) return;
-      const { entries: rawEntries } = await res.json();
-
-      const { encryptionKey } = useAuthStore.getState();
-      if (!encryptionKey) return;
-
-      const decrypted: import('@/store').DecryptedEntry[] = [];
-      for (const e of rawEntries) {
-        try {
-          const data = await decryptEntry(e.encryptedData, e.iv, encryptionKey);
-          decrypted.push({
-            id: e.id,
-            data,
-            createdAt: e.createdAt,
-            updatedAt: e.updatedAt,
-          });
-        } catch {
-          // Skip entries that can't be decrypted
-        }
-      }
-      setEntries(decrypted);
-    } catch {
-      // Silent fail
     }
   };
 

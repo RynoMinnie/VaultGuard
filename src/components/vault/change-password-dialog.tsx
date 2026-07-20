@@ -13,7 +13,8 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 
 import { useAuthStore, useVaultStore } from '@/store';
-import { hashPassword, generateSalt, deriveEncryptionKey, encryptEntry } from '@/lib/crypto';
+import { hashPassword, generateSalt, deriveEncryptionKey, encryptEntry, decryptEntry } from '@/lib/crypto';
+import { getVaultCredentials, updateVaultCredentials, getAllEntries, saveEntries, type StoredEntry } from '@/lib/db-local';
 import type { DecryptedEntry } from '@/store';
 import { toast } from 'sonner';
 import { ShieldCheck, Loader2 } from 'lucide-react';
@@ -24,8 +25,8 @@ interface ChangePasswordDialogProps {
 }
 
 export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialogProps) {
-  const { token, encryptionKey, userId, encryptionSalt, logout } = useAuthStore();
-  const { entries, setEntries } = useVaultStore();
+  const { encryptionKey, encryptionSalt, login, username } = useAuthStore();
+  const { entries } = useVaultStore();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -44,67 +45,46 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
       toast.error('Master password must be at least 8 characters');
       return;
     }
-    if (!token || !encryptionKey || !encryptionSalt) {
+    if (!encryptionKey || !encryptionSalt) {
       toast.error('Not authenticated');
       return;
     }
 
     setLoading(true);
     try {
-      // Verify current password
-      const oldHash = await hashPassword(currentPassword, encryptionSalt);
+      // 1. Verify current password against stored hash
+      const credentials = await getVaultCredentials();
+      if (!credentials) {
+        toast.error('No vault found');
+        return;
+      }
+      const oldHash = await hashPassword(currentPassword, credentials.salt);
+      if (oldHash !== credentials.passwordHash) {
+        toast.error('Current password is incorrect');
+        return;
+      }
 
-      // Generate new salts
+      // 2. Generate new salts and hash
       const newSalt = generateSalt();
       const newEncryptionSalt = generateSalt();
-      const newHash = await hashPassword(newPassword, newEncryptionSalt);
-
-      // Derive new encryption key
+      const newHash = await hashPassword(newPassword, newSalt);
       const newKey = await deriveEncryptionKey(newPassword, newEncryptionSalt);
 
-      // Re-encrypt all entries
-      const reEncryptedEntries: { id: string; encryptedData: string; iv: string }[] = [];
-      for (const entry of entries) {
-        const { encryptedData, iv } = await encryptEntry(entry.data, newKey);
-        reEncryptedEntries.push({
-          id: entry.id,
-          encryptedData,
-          iv,
-        });
+      // 3. Re-encrypt all entries from IndexedDB
+      const storedEntries = await getAllEntries();
+      const updatedEntries: StoredEntry[] = [];
+      for (const entry of storedEntries) {
+        const data = await decryptEntry(entry.encryptedData, entry.iv, encryptionKey);
+        const { encryptedData, iv } = await encryptEntry(data, newKey);
+        updatedEntries.push({ ...entry, encryptedData, iv, updatedAt: new Date().toISOString() });
       }
 
-      // Send to server
-      const res = await fetch('/api/auth/change-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token,
-          oldPasswordHash: oldHash,
-          newPasswordHash: newHash,
-          newSalt,
-          newEncryptionSalt,
-          reEncryptedEntries,
-        }),
-      });
+      // 4. Save everything to IndexedDB
+      await updateVaultCredentials({ passwordHash: newHash, salt: newSalt, encryptionSalt: newEncryptionSalt });
+      await saveEntries(updatedEntries);
 
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || 'Failed to change password');
-      }
-
-      const data = await res.json();
-
-      // Re-login with new credentials
-      const derivedKey = await deriveEncryptionKey(newPassword, newEncryptionSalt);
-
-      // Update store
-      useAuthStore.getState().login(
-        data.token,
-        userId!,
-        useAuthStore.getState().username!,
-        derivedKey,
-        newEncryptionSalt
-      );
+      // 5. Update auth store
+      login('local', 'local', username || credentials.name, newKey, newEncryptionSalt);
 
       toast.success('Master password changed successfully');
       onOpenChange(false);

@@ -981,3 +981,152 @@ Stage Summary:
 - Service worker provides offline caching for static assets and the shell, while never caching sensitive API requests
 - Store packaging instructions provided for Google Play and Microsoft Store via PWABuilder
 - Lint passes with 0 errors
+
+---
+Task ID: 2
+Agent: Documentation Agent
+Task: Update docs for local-only architecture (server-based → fully client-side with IndexedDB)
+
+Work Log:
+- Read current README.md, PUBLIC_STORE_PACKAGES.md, and worklog.md for context
+- Rewrote README.md for the new local-only architecture:
+  - Updated header/description to emphasize "No server. No cloud. Your data never leaves your device."
+  - Added new "Privacy-First Architecture" feature section at the top of Features
+  - Replaced security architecture diagram with browser-only diagram (no server column, IndexedDB storage, crossed-out server items)
+  - Updated Tech Stack table: removed SQLite/Prisma, added IndexedDB (client-side storage)
+  - Removed app/api/ directory from Project Structure, removed lib/auth.ts, lib/db.ts, lib/rate-limit.ts, added lib/db-local.ts
+  - Removed entire API Reference section, replaced with "No Server Required" note
+  - Rewrote Deployment section for free static hosting (Vercel, Netlify, GitHub Pages)
+  - Removed db:push from Quick Start, removed Environment Variables section
+  - Removed rate limiting, session security headers, and memory-only sessions from Security features
+  - Removed session indicator from Design features
+- Rewrote PUBLIC_STORE_PACKAGES.md with ELI10 beginner-friendly instructions:
+  - Added "What is this file?" section explaining PWAs and store packages
+  - Added detailed deployment guides for Vercel (~30 steps), Netlify (~20 steps), GitHub Pages (~15 steps)
+  - Each guide includes creating a GitHub account, creating a repo, pushing code, and deploying
+  - Expanded PWABuilder section with explanation of what it is and what the score means
+  - Expanded Google Play Store section with example store listing text, screenshot instructions, content rating guidance, privacy policy notes
+  - Expanded Microsoft Store section with full step-by-step walkthrough
+  - Added "Updating Your App" section explaining the update flow for PWA users vs store users
+  - Added "Troubleshooting" section with common issues and fixes (blank screen, low PWABuilder score, store rejections, deployment failures)
+  - Used friendly, encouraging tone with bold UI elements and actual URLs throughout
+- Appended this work log entry to worklog.md
+
+Stage Summary:
+- README.md fully rewritten for local-only IndexedDB architecture
+- PUBLIC_STORE_PACKAGES.md rewritten with comprehensive ELI10 beginner instructions
+- Both documents reflect removal of server, Prisma, SQLite, API routes, sessions, rate limiting
+- Both documents reflect addition of IndexedDB, static hosting, simplified auth (Create Vault / Unlock Vault)
+- No code files were modified
+
+---
+Task ID: 1
+Agent: Core Refactor Agent
+Task: Core refactor to local-only IndexedDB — remove all API calls, replace with browser IndexedDB
+
+Work Log:
+- Created `src/lib/db-local.ts` — full IndexedDB wrapper with:
+  - `vaultExists()`, `getVaultCredentials()`, `createVault()`, `updateVaultCredentials()` for vault credentials
+  - `getAllEntries()`, `saveEntry()`, `updateEntry()`, `deleteEntry()`, `deleteEntries()`, `saveEntries()` for encrypted entries
+  - `clearAllData()` for factory reset
+  - Two object stores: `settings` (keyPath: 'key') and `entries` (keyPath: 'id', index on updatedAt)
+- Refactored `src/app/page.tsx` — major rewrite:
+  - Added IndexedDB imports (`checkVaultExists`, `getVaultCredentials`, `createVaultDB`, `getAllEntries`, `saveEntryDB`, `updateEntryDB`, `deleteEntryDB`, `deleteEntriesDB`)
+  - Removed all `fetch('/api/...')` calls (login, register, salt, logout, version, entries CRUD)
+  - AuthScreen: removed Sign In / Register tabs, now takes `hasVault` boolean prop
+    - When `!hasVault`: shows "Create Your Vault" form with vault name + master password + confirm
+    - When `hasVault`: shows "Unlock Vault" form with stored vault name display + master password only
+    - Vault name fetched from IndexedDB via `getVaultCredentials()` on mount
+    - `handleCreateVault`: generates salts, hashes password, stores credentials in IndexedDB, derives key, logs in
+    - `handleUnlock`: verifies password against stored hash, derives key, loads+decrypts all entries from IndexedDB, logs in
+  - VaultScreen:
+    - Removed `token` usage, `versionInfo` is now just `APP_VERSION` constant (no fetch)
+    - `reloadEntries`: reads from IndexedDB and decrypts (replaces `fetchEntries` with API)
+    - `handleSaved`: encrypts + saves to IndexedDB, then updates store
+    - `handleUpdated`: encrypts + updates in IndexedDB, then updates store
+    - `handleDelete`: deletes from IndexedDB, then removes from store
+    - `handleBulkDelete`: batch deletes from IndexedDB, then removes from store
+    - `handleLogout`: clears in-memory state only (no API call)
+    - Auto-logout (inactivity timeout): clears auth/vault state, no API call
+  - HomePage:
+    - Added `hasVault` state (null while checking) + `useEffect` calling `checkVaultExists()`
+    - Shows brief loading spinner while checking IndexedDB
+    - Passes `hasVault` to `AuthScreen`
+    - Passes `reloadEntries` as `onImportComplete` to `ImportExportDialog`
+  - Footer text updated: "Zero-Knowledge Encryption" → "Local-Only Encryption"
+  - Store login() calls use 'local' dummy values for token/userId
+  - Removed unused imports: `useRef`, `UserPlus`
+- Updated `src/components/vault/entry-form-dialog.tsx`:
+  - Removed `encryptEntry` import and `token` usage
+  - `handleSave` now generates `crypto.randomUUID()` for new entries, passes `DecryptedEntry` to parent callbacks
+  - No API calls — parent (page.tsx) handles encryption + IndexedDB storage
+- Updated `src/components/vault/import-export-dialog.tsx`:
+  - Added `onImportComplete` callback prop
+  - Removed `token` usage and all `fetch('/api/...')` calls
+  - `handleExport`: builds export data from in-memory entries, triggers browser download
+  - `handleImport`: stores encrypted entries directly via `saveEntries()` to IndexedDB, calls `onImportComplete`
+  - `handleCsvImport`: encrypts CSV rows, saves via `saveEntries()`, calls `onImportComplete`
+  - Replace mode: clears all IndexedDB entries via `deleteEntriesDB()` before importing
+- Updated `src/components/vault/change-password-dialog.tsx`:
+  - Removed `token`, `userId`, `logout` usage
+  - Added IndexedDB imports: `getVaultCredentials`, `updateVaultCredentials`, `getAllEntries`, `saveEntries`, `type StoredEntry`
+  - `handleSubmit` now: verifies password against IndexedDB hash, generates new salts, re-encrypts all entries from IndexedDB, saves back, updates auth store
+  - Added `decryptEntry` import for re-encryption flow
+- Verified: 0 ESLint errors, 0 TypeScript errors in src/
+- Verified: zero `fetch('/api/...')` calls remain in any modified file
+
+Stage Summary:
+- Fully local-only architecture: all data stored in IndexedDB, no server needed
+- All 4 files modified: page.tsx, entry-form-dialog.tsx, import-export-dialog.tsx, change-password-dialog.tsx
+- 1 new file created: src/lib/db-local.ts
+- No files deleted (API routes remain for separate cleanup)
+- Crypto (crypto.ts) and store (store/index.ts) unchanged
+- All UI styling, animations, and visual elements preserved exactly
+- Static site deployment ready — can be hosted on Vercel/Netlify/GitHub Pages
+---
+Task ID: 11
+Agent: Main Agent (Local-Only Architecture Refactor)
+Task: Refactor from server-based to fully local IndexedDB architecture + docs update
+
+Work Log:
+- Planned and launched 2 parallel agents:
+  - Agent 1: Core refactor (db-local.ts, page.tsx, import-export-dialog.tsx, change-password-dialog.tsx)
+  - Agent 2: Documentation (README.md, PUBLIC_STORE_PACKAGES.md)
+- Agent 1 completed: Created IndexedDB wrapper, rewrote all data operations, simplified auth
+- Agent 2 completed: Rewrote README for local-only architecture, wrote detailed ELI10 deployment guide
+- Deleted all server-side files: src/app/api/ (entire directory), src/lib/db.ts, src/lib/auth.ts, src/lib/rate-limit.ts
+- Verified zero fetch('/api/...') calls remain in src/
+- Fixed bug: hasVault state only checked on mount, not after logout — added isAuthenticated dependency
+- Full E2E verification via agent-browser:
+  - Fresh visit shows "Create Your Vault" (not Sign In/Register tabs)
+  - Created vault with name "My Vault" + password → entries stored in IndexedDB
+  - Vault screen loaded: 10 stat cards, onboarding cards, "My Vault" in header
+  - Added GitHub entry via quick-action → persisted to IndexedDB
+  - "Backup recommended" banner appeared
+  - Logged out (vault locked) → screen re-checked IndexedDB
+  - "Unlock Vault" screen appeared with "My Vault" name displayed
+  - Correct password → vault unlocked, GitHub entry still there (data persisted)
+  - Wrong password → "Incorrect password" error toast
+
+Stage Summary:
+- ARCHITECTURE: Fully client-side, zero server dependency
+- NEW: src/lib/db-local.ts — IndexedDB wrapper (2 object stores: settings + entries, 11 exported functions)
+- REMOVED: 13 API route files, 3 server-side utility files (db.ts, auth.ts, rate-limit.ts)
+- SIMPLIFIED: Auth screen — no more Sign In/Register tabs, just Create Vault / Unlock Vault
+- SIMPLIFIED: All data operations now use IndexedDB instead of HTTP fetch calls
+- BUG FIX: hasVault re-checked on logout so "Unlock Vault" screen appears correctly
+- DOCS: README.md rewritten for local-only architecture (no API section, IndexedDB in tech stack)
+- DOCS: PUBLIC_STORE_PACKAGES.md rewritten with detailed ELI10 deployment guides (Vercel, Netlify, GitHub Pages)
+- DOCS: Store package instructions (PWABuilder, Google Play, Microsoft Store) with step-by-step detail
+- Files created: src/lib/db-local.ts
+- Files modified: src/app/page.tsx, src/components/vault/import-export-dialog.tsx, src/components/vault/change-password-dialog.tsx, src/components/vault/entry-form-dialog.tsx, README.md, PUBLIC_STORE_PACKAGES.md
+- Files deleted: src/app/api/ (entire directory), src/lib/db.ts, src/lib/auth.ts, src/lib/rate-limit.ts
+- Verified: 0 ESLint errors, clean compilation, full E2E flow (create → add entry → lock → unlock → wrong password rejection)
+
+- 项目当前状态描述/判断:
+  VaultGuard v1.0.0 已完成从服务端到纯客户端架构的重大重构。所有数据存储在用户浏览器的 IndexedDB 中，无需服务器。认证流程简化为"创建保管库/解锁保管库"。应用现在可以免费部署为静态站点（Vercel/Netlify/GitHub Pages），并可通过 PWABuilder 生成 Android 和 Windows Store 安装包。README 和部署指南已更新为详细的初学者友好版本。
+
+- 未解决问题或风险:
+  1. 需要在 next.config.ts 中添加 output: 'export' 以支持静态导出部署
+  2. Prisma 依赖可以在 package.json 中移除（不再需要）
+  3. 建议在真实设备上测试 PWA 安装体验

@@ -243,7 +243,7 @@ GitHub Pages needs a small configuration file to know how to build your app. Don
          - uses: actions/checkout@v4
          - uses: actions/setup-node@v4
            with:
-             node-version: 20
+             node-version: 22
          - run: npm install
          - run: npm run build
          - uses: actions/upload-pages-artifact@v3
